@@ -1,7 +1,8 @@
-import 'package:authentication_repository/authentication_repository.dart';
 import 'package:dating/app/app.dart';
-import 'package:dating/extensions.dart';
+import 'package:dating/misc/extensions.dart';
 import 'package:dating/signin/signin.dart';
+import 'package:dating/signup/bloc/formz/formz.dart';
+import 'package:dating/formz/formz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -11,10 +12,8 @@ class PasswordSignIn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<PasswordSignInBloc>(
-      create: (context) => PasswordSignInBloc(
-        authRepository: RepositoryProvider.of<AuthRepository>(context),
-      ),
+    return BlocProvider(
+      create: (_) => PasswordSignInBloc(),
       child: const _PasswordSignIn(),
     );
   }
@@ -26,22 +25,13 @@ class _PasswordSignIn extends HookWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<PasswordSignInBloc, PasswordSignInState>(
-      builder: (context, state) {
-        switch (state) {
-          case PasswordSignInLoadingState _:
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          case PasswordSignInErrorState _:
-            return Center(
-              child: Text('ERROR: ${state.error.toString()}'),
-            );
-          case PasswordSignInSuccessState _:
-            BlocProvider.of<AppBloc>(context).authenticate();
-            return const SizedBox();
-          case PasswordSignInInputState _:
-            return _PasswordSignInInput();
+      builder: (_, state) {
+        if (state.loading) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
         }
+        return _PasswordSignInInput();
       },
     );
   }
@@ -50,8 +40,20 @@ class _PasswordSignIn extends HookWidget {
 class _PasswordSignInInput extends HookWidget {
   @override
   Widget build(BuildContext context) {
-    final phoneController = useTextEditingController();
-    final passwordController = useTextEditingController();
+    final phoneController =
+        useTextEditingController(text: '+995595506963'.ifDebug);
+
+    final passwordController =
+        useTextEditingController(text: '19920220'.ifDebug);
+
+    useEffect(() {
+      context.read<PasswordSignInBloc>().changePhone(phoneController.text);
+      context
+          .read<PasswordSignInBloc>()
+          .changePassword(passwordController.text);
+
+      return null;
+    }, [phoneController, passwordController]);
 
     return Center(
       child: Column(
@@ -67,35 +69,12 @@ class _PasswordSignInInput extends HookWidget {
           const SizedBox(height: 32),
           SizedBox(
             width: 240,
-            child: TextField(
-              controller: phoneController,
-              onChanged: (value) {
-                context
-                    .read<PasswordSignInBloc>()
-                    .changeInput(phone: phoneController.text);
-              },
-              keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                hintText: 'Phone number',
-              ),
-            ),
+            child: _PhoneTextField(phoneController: phoneController),
           ),
           const SizedBox(height: 16),
           SizedBox(
             width: 240,
-            child: TextField(
-              controller: passwordController,
-              onChanged: (value) {
-                context
-                    .read<PasswordSignInBloc>()
-                    .changeInput(password: passwordController.text);
-              },
-              keyboardType: TextInputType.text,
-              obscureText: true,
-              decoration: const InputDecoration(
-                hintText: 'Password',
-              ),
-            ),
+            child: _PasswordTextField(passwordController: passwordController),
           ),
           const SizedBox(height: 32),
           ElevatedButton(
@@ -107,7 +86,20 @@ class _PasswordSignInInput extends HookWidget {
             onPressed: context.read<SignInBloc>().goToPhone,
             child: const Text('Sign in with SMS-code'),
           ),
-          const SizedBox(height: 96),
+          const SizedBox(height: 24),
+          SizedBox(
+            height: 24,
+            child:
+                BlocSelector<PasswordSignInBloc, PasswordSignInState, String?>(
+              selector: (PasswordSignInState state) => state.error,
+              builder: (context, error) => Text(
+                error ?? '',
+                style: context.textTheme.bodyMedium!
+                    .copyWith(color: context.colorScheme.error),
+              ),
+            ),
+          ),
+          const SizedBox(height: 36),
           const Text('Don\'t have an account?'),
           TextButton(
             onPressed: context.read<AppBloc>().goToSignUp,
@@ -115,6 +107,71 @@ class _PasswordSignInInput extends HookWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _PasswordTextField extends StatelessWidget {
+  const _PasswordTextField({
+    required this.passwordController,
+  });
+
+  final TextEditingController passwordController;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<PasswordSignInBloc, PasswordSignInState>(
+      buildWhen: (prev, cur) =>
+          (prev as PasswordSignInInputState).password !=
+          (cur as PasswordSignInInputState).password,
+      builder: (context, state) {
+        return TextField(
+          controller: passwordController,
+          onChanged: context.read<PasswordSignInBloc>().changePassword,
+          keyboardType: TextInputType.text,
+          obscureText: true,
+          decoration: InputDecoration(
+            hintText: 'Password',
+            labelText: 'Password',
+            errorText: (state as PasswordSignInInputState)
+                .password
+                .displayError
+                ?.description,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PhoneTextField extends StatelessWidget {
+  const _PhoneTextField({
+    required this.phoneController,
+  });
+
+  final TextEditingController phoneController;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<PasswordSignInBloc, PasswordSignInState>(
+      buildWhen: (prev, cur) =>
+          (prev as PasswordSignInInputState).phone !=
+          (cur as PasswordSignInInputState).phone,
+      builder: (context, state) {
+        return TextField(
+          controller: phoneController,
+          onChanged: context.read<PasswordSignInBloc>().changePhone,
+          keyboardType: TextInputType.phone,
+          decoration: InputDecoration(
+            hintText: 'Phone number',
+            labelText: 'Phone number',
+            errorText: (state as PasswordSignInInputState)
+                .phone
+                .displayError
+                ?.description,
+          ),
+        );
+      },
     );
   }
 }

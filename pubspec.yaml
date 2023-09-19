@@ -5,8 +5,6 @@ version: 1.0.0+1
 environment:
   sdk: '>=3.1.0 <4.0.0'
 dependencies:
-  authentication_repository:
-    path: packages/authentication_repository
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.2
@@ -21,7 +19,23 @@ dependencies:
   equatable: ^2.0.5
   flutter_hooks: ^0.20.1
   formz: ^0.6.0
+  collection: ^1.17.2
+  flutter_layout_grid: ^2.0.5
+  path_provider: ^2.1.1
+  cached_network_image: ^3.2.3
+  image_picker: ^1.0.4
+  uuid: ^4.0.0
+  flutter_image_compress: ^2.0.4
+  timeago: ^3.5.0
+  location: 4.4.0
+  hydrated_bloc: ^9.1.2
+  carousel_slider: ^4.2.1
+  photo_view: ^0.14.0
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.18.1
 dev_dependencies:
+  shared_preferences: ^2.2.1
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.0
@@ -34,3 +48,5 @@ flutter:
     - assets/flags2/
     - assets/icons/
     - assets/marmot.jpg
+    - assets/images/
+  generate: true

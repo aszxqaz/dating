@@ -7,11 +7,17 @@ sealed class SignUpEvent {
 
 final class SignUpInputChanged extends SignUpEvent {
   const SignUpInputChanged({
+    this.option,
+    this.email,
     this.phone,
+    this.birthdate,
     this.password,
     this.confirmed,
   });
+  final SignUpOption? option;
   final Phone? phone;
+  final Email? email;
+  final Birthdate? birthdate;
   final Password? password;
   final ConfirmedPassword? confirmed;
 }

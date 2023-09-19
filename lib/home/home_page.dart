@@ -1,10 +1,14 @@
 import 'package:dating/app/app.dart';
 import 'package:dating/assets/icons.dart';
-import 'package:dating/user/user.dart';
+import 'package:dating/hot/bloc/hot_bloc.dart';
+import 'package:dating/hot/hot.dart';
+import 'package:dating/user/bloc/user_bloc.dart';
+import 'package:dating/user/user_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:dating/extensions.dart';
+import 'package:dating/misc/extensions.dart';
 import 'package:dating/home/bloc/home_bloc.dart';
 
 class HomePage extends StatelessWidget {
@@ -14,15 +18,28 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => HomeBloc(),
-      child: _HomePage(),
+      child: BlocProvider(
+        create: (_) => HotBloc(),
+        child: BlocProvider(
+          create: (_) => UserBloc(),
+          child: _HomePage(),
+        ),
+      ),
     );
   }
 }
 
-class _HomePage extends StatelessWidget {
+class _HomePage extends HookWidget {
   @override
   Widget build(BuildContext context) {
+    useEffect(() {
+      context.read<HomeBloc>().startLocationSubscription();
+
+      return null;
+    }, []);
+
     return BlocBuilder<HomeBloc, HomeState>(
+      // buildWhen: (p, c) => p.tab != c.tab,
       builder: (context, state) {
         return Scaffold(
           appBar: AppBar(
@@ -49,11 +66,11 @@ class _HomePage extends StatelessWidget {
                 case HomeTabs.notifications:
                   return const Text('Notifications');
                 case HomeTabs.slides:
-                  return const Text('Slides');
+                  return const HotPage();
                 case HomeTabs.messages:
                   return const Text('Messages');
                 case HomeTabs.user:
-                  return UserView();
+                  return const UserView();
               }
             },
           ),
@@ -64,15 +81,14 @@ class _HomePage extends StatelessWidget {
 }
 
 class _HomeBottomNavigationBar extends StatelessWidget {
-  const _HomeBottomNavigationBar({
-    super.key,
-  });
+  const _HomeBottomNavigationBar();
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: context.theme.colorScheme.primaryContainer,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
             color: context.colorScheme.onPrimaryContainer.withOpacity(0.2),
@@ -81,7 +97,7 @@ class _HomeBottomNavigationBar extends StatelessWidget {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12.0),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: BlocBuilder<HomeBloc, HomeState>(builder: (context, state) {
           return Row(
             mainAxisSize: MainAxisSize.max,
@@ -125,7 +141,6 @@ class _HomeBottomNavigationBar extends StatelessWidget {
 
 class _BottomNavigationBarIconButton extends StatelessWidget {
   const _BottomNavigationBarIconButton({
-    super.key,
     required this.onPressed,
     required this.src,
     required this.isActive,
@@ -139,12 +154,16 @@ class _BottomNavigationBarIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return IconButton(
       onPressed: onPressed,
-      icon: SvgPicture.asset(
-        src,
-        colorFilter: ColorFilter.mode(
-          context.colorScheme.onPrimaryContainer
-              .withOpacity(isActive ? 1 : 0.7),
-          BlendMode.srcIn,
+      icon: SizedBox(
+        width: 20,
+        height: 20,
+        child: SvgPicture.asset(
+          src,
+          colorFilter: ColorFilter.mode(
+            context.colorScheme.onPrimaryContainer
+                .withOpacity(isActive ? 0.7 : 0.3),
+            BlendMode.srcIn,
+          ),
         ),
       ),
     );

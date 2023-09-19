@@ -1,16 +1,15 @@
-import 'package:authentication_repository/authentication_repository.dart';
 import 'package:bloc/bloc.dart';
 import 'package:dating/formz/formz.dart';
+import 'package:dating/signup/bloc/formz/birthdate.dart';
 import 'package:dating/signup/bloc/formz/formz.dart';
-import 'package:flutter/material.dart';
+import 'package:dating/supabase/auth_service.dart';
+import 'package:flutter/foundation.dart';
 
 part 'signup_event.dart';
 part 'signup_state.dart';
 
 class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
-  SignUpBloc({required AuthRepository authRepository})
-      : _authRepository = authRepository,
-        super(SignUpInputState.initial()) {
+  SignUpBloc() : super(SignUpInputState.initial()) {
     // Input changed event
     on<SignUpInputChanged>(
       (event, emit) {
@@ -18,29 +17,44 @@ class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
 
         emit(
           (state as SignUpInputState).copyWith(
+            option: event.option,
             phone: event.phone,
+            email: event.email,
             password: event.password,
             confirmed: event.confirmed,
+            birthdate: event.birthdate,
           ),
         );
       },
     );
 
+    // --- SUBMIT ---
     on<SignUpSubmitEvent>((event, emit) async {
       final state = this.state as SignUpInputState;
 
       emit(state.copyWith(loading: true));
 
       try {
-        await _authRepository.signUp(
-          phone: state.phone,
-          password: state.password,
+        final phone = state.option.isPhoneOrBoth ? state.phone.value : null;
+        final email = state.option.isEmailOrBoth ? state.email.value : null;
+
+        await authService.signUp(
+          phone: phone,
+          email: email,
+          password: state.password.value,
+          birthdate: state.birthdate.value,
         );
-        emit(SignUpVerifyState.initial());
-      } on AuthenticationRepositorySignUpError catch (error) {
+
+        if (state.option.isPhoneOrBoth) {
+          emit(SignUpVerifyState.initial());
+        }
+      } on AuthenticationError catch (error) {
+        emit(state.copyWith(loading: false, error: error.message));
+      } catch (err) {
+        debugPrint(err.toString());
         emit(state.copyWith(
           loading: false,
-          error: error.message,
+          error: kDebugMode ? err.toString() : 'Unknown error occured',
         ));
       }
     });
@@ -55,23 +69,39 @@ class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
       emit(state.copyWith(loading: true));
 
       try {
-        await _authRepository.verifyCode(phone: _phone!, code: state.code);
+        await authService.verifyCode(phone: _phone!, code: state.code);
       } catch (e) {
-        emit(state.copyWith(loading: false, error: 'Unknown error occured.'));
+        emit(state.copyWith(
+          loading: false,
+          error: kDebugMode ? e.toString() : 'Unknown error occured.',
+        ));
       }
     });
   }
 
-  final AuthRepository _authRepository;
   String? _phone;
 
   // --- First stage
+  void changeOption(SignUpOption? option) {
+    debugPrint(option.toString());
+    if (option != null) {
+      add(SignUpInputChanged(option: option));
+    }
+  }
+
   void changePhone(String phone) {
-    add(
-      SignUpInputChanged(
-        phone: Phone.dirty(phone),
-      ),
-    );
+    add(SignUpInputChanged(phone: Phone.dirty(phone)));
+  }
+
+  void changeEmail(String email) {
+    add(SignUpInputChanged(email: Email.dirty(email)));
+  }
+
+  void changeBirthdate(DateTime? birthdate) {
+    final str = birthdate == null
+        ? ''
+        : '${birthdate.year}-${birthdate.month}-${birthdate.day}';
+    add(SignUpInputChanged(birthdate: Birthdate.pure(str)));
   }
 
   void changePassword(String password) {
@@ -79,7 +109,7 @@ class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
     add(
       SignUpInputChanged(
         password: Password.dirty(password),
-        confirmed: signUpState._confirmed.copyWith(other: password),
+        confirmed: signUpState.confirmed.copyWith(other: password),
       ),
     );
   }
@@ -88,7 +118,7 @@ class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
     final signUpState = state as SignUpInputState;
     add(
       SignUpInputChanged(
-        confirmed: signUpState._confirmed.copyWith(value: confirmed),
+        confirmed: signUpState.confirmed.copyWith(value: confirmed),
       ),
     );
   }

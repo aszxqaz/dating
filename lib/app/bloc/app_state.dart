@@ -10,8 +10,8 @@ sealed class AppState {
 final class AppUnauthenticatedState extends AppState {
   const AppUnauthenticatedState({required this.tab});
 
-  factory AppUnauthenticatedState.initial() =>
-      const AppUnauthenticatedState(tab: UnauthenticatedTabs.signin);
+  static const initial =
+      AppUnauthenticatedState(tab: UnauthenticatedTabs.signin);
 
   final UnauthenticatedTabs tab;
 }

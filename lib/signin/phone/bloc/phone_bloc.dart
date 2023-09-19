@@ -1,27 +1,28 @@
 import 'package:bloc/bloc.dart';
+import 'package:dating/supabase/auth_service.dart';
 import 'package:flutter/material.dart';
-import 'package:authentication_repository/authentication_repository.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 part 'phone_state.dart';
 part 'phone_event.dart';
 
 class PhoneSignInBloc extends Bloc<PhoneSignInEvent, PhoneSignInState> {
-  PhoneSignInBloc({required AuthRepository authRepository})
-      : _authRepository = authRepository,
-        super(const PhoneSignInInputState(phone: '+')) {
+  PhoneSignInBloc() : super(const PhoneSignInInputState(phone: '+')) {
     on<PhoneSignInPhoneChanged>((event, emit) {
       emit(PhoneSignInInputState(phone: event.phone));
     });
 
     on<PhoneSignInPhoneSubmit>((event, emit) async {
-      assert(state is PhoneSignInInputState);
-      _phone = (state as PhoneSignInInputState).phone;
-      emit(const PhoneSignInLoadingState());
+      final state = this.state as PhoneSignInInputState;
+      _phone = state.phone;
+
+      emit(state.copyWith(loading: true));
+
       try {
-        await _authRepository.signInWithPhone(phone: _phone!);
+        await authService.signInWithPhone(phone: _phone!);
         emit(const PhoneSignInVerifyState(code: ''));
       } catch (e) {
-        emit(PhoneSignInErrorState(error: e));
+        emit(state.copyWith(error: 'Unknown error occured'));
       }
     });
 
@@ -30,20 +31,22 @@ class PhoneSignInBloc extends Bloc<PhoneSignInEvent, PhoneSignInState> {
     });
 
     on<PhoneSignInVerifySubmit>((event, emit) async {
-      assert(state is PhoneSignInVerifyState);
-      final code = (state as PhoneSignInVerifyState).code;
-      emit(const PhoneSignInLoadingState());
+      final state = this.state as PhoneSignInVerifyState;
+
+      emit(state.copyWith(loading: true));
+
       try {
-        await _authRepository.verifyCode(phone: _phone!, code: code);
-        // emit(PhoneSignInSuccessState(phone: _phone!));
+        await authService.verifyCode(phone: _phone!, code: state.code);
       } catch (e) {
-        emit(PhoneSignInErrorState(error: e));
+        emit(state.copyWith(error: 'Unknown error occured'));
       }
     });
   }
 
-  final AuthRepository _authRepository;
   String? _phone;
+
+  static PhoneSignInBloc of(BuildContext context) =>
+      context.read<PhoneSignInBloc>();
 
   void changePhone(String phone) {
     add(PhoneSignInPhoneChanged(phone: phone));

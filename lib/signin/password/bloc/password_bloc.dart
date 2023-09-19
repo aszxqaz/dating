@@ -1,5 +1,7 @@
-import 'package:authentication_repository/authentication_repository.dart';
 import 'package:bloc/bloc.dart';
+import 'package:dating/formz/formz.dart';
+import 'package:dating/signup/bloc/formz/formz.dart';
+import 'package:dating/supabase/auth_service.dart';
 import 'package:flutter/material.dart';
 
 part 'password_event.dart';
@@ -7,52 +9,59 @@ part 'password_state.dart';
 
 class PasswordSignInBloc
     extends Bloc<PasswordSignInEvent, PasswordSignInState> {
-  PasswordSignInBloc({required AuthRepository authRepository})
-      : _authRepository = authRepository,
-        super(
-          PasswordSignInInputState.initial(),
+  PasswordSignInBloc()
+      : super(
+          PasswordSignInInputState.initial,
         ) {
     // --- Input changed event
     on<PasswordSignInInputChanged>((event, emit) {
-      assert(state is PasswordSignInInputState);
+      final state = this.state as PasswordSignInInputState;
 
-      emit((state as PasswordSignInInputState).copyWith(
-        phone: event.phone,
-        password: event.password,
+      emit(state.copyWith(
+        phone: event.phone != null
+            ? state.phone.isPure
+                ? Phone.pure(event.phone!)
+                : Phone.dirty(event.phone!)
+            : state.phone,
+        password: event.password != null
+            ? state.password.isPure
+                ? Password.pure(event.password!)
+                : Password.dirty(event.password!)
+            : state.password,
       ));
     });
 
     // --- Submit event
     on<PasswordSignInSubmit>((event, emit) async {
-      assert(state is PasswordSignInInputState);
+      final state = this.state as PasswordSignInInputState;
 
-      final phone = (state as PasswordSignInInputState).phone;
-      final password = (state as PasswordSignInInputState).password;
+      final phone = Phone.dirty(state.phone.value);
+      final password = Password.dirty(state.password.value);
 
-      emit(const PasswordSignInLoadingState());
+      if (phone.isNotValid || password.isNotValid) {
+        emit(state.copyWith(phone: phone, password: password));
+        return;
+      }
 
-      try {
-        await _authRepository.signInWithPassword(
-          phoneOrEmail: phone,
-          password: password,
-        );
-        emit(const PasswordSignInSuccessState());
-      } catch (e) {
-        emit(PasswordSignInErrorState(error: e));
+      emit(state.copyWith(loading: true));
+
+      final error = await authService.signInWithPassword(
+        phoneOrEmail: state.phone.value,
+        password: state.password.value,
+      );
+
+      if (error != null) {
+        emit(state.copyWith(error: error.message, loading: false));
       }
     });
   }
 
-  final AuthRepository _authRepository;
+  void changePhone(String phone) {
+    add(PasswordSignInInputChanged(phone: phone));
+  }
 
-  void changeInput({
-    String? phone,
-    String? password,
-  }) {
-    add(PasswordSignInInputChanged(
-      phone: phone,
-      password: password,
-    ));
+  void changePassword(String password) {
+    add(PasswordSignInInputChanged(password: password));
   }
 
   void submitInput() {

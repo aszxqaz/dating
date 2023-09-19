@@ -1,20 +1,20 @@
-import 'package:authentication_repository/authentication_repository.dart';
+import 'package:dating/supabase/auth_service.dart';
+import 'package:dating/supabase/client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'app_event.dart';
 part 'app_state.dart';
 
 class AppBloc extends Bloc<AppEvent, AppState> {
-  AppBloc({required AuthRepository authRepository})
-      : _authRepository = authRepository,
-        super(AppUnauthenticatedState.initial()) {
+  AppBloc() : super(AppUnauthenticatedState.initial) {
     on<AppAuthenticatedEvent>((event, emit) {
       emit(const AppAuthenticatedState());
     });
 
     on<AppUnauthenticatedEvent>((event, emit) {
-      emit(AppUnauthenticatedState.initial());
+      emit(AppUnauthenticatedState.initial);
     });
 
     on<AppUnauthenticatedTabChanged>((event, emit) {
@@ -22,23 +22,23 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       emit(AppUnauthenticatedState(tab: event.tab));
     });
 
-    _authRepository.user.forEach((user) {
-      if (user == null) {
-        add(const AppUnauthenticatedEvent());
-      } else {
-        add(const AppAuthenticatedEvent());
+    supabaseClient.auth.onAuthStateChange.listen((data) {
+      switch (data.event) {
+        case AuthChangeEvent.signedIn:
+          add(const AppAuthenticatedEvent());
+        case AuthChangeEvent.signedOut:
+          add(const AppUnauthenticatedEvent());
+        default:
       }
     });
   }
-
-  final AuthRepository _authRepository;
 
   void authenticate() {
     add(const AppAuthenticatedEvent());
   }
 
   void signOut() {
-    _authRepository.signOut();
+    authService.signOut();
   }
 
   void goToSignIn() {

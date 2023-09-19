@@ -1,11 +1,8 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
-
-import 'package:authentication_repository/authentication_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:dating/app/bloc/app_bloc.dart';
-import 'package:dating/extensions.dart';
+import 'package:dating/misc/extensions.dart';
 import 'package:dating/signin/signin.dart';
 
 class PhoneSignIn extends StatelessWidget {
@@ -13,36 +10,29 @@ class PhoneSignIn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<PhoneSignInBloc>(
-      create: (context) => PhoneSignInBloc(
-        authRepository: RepositoryProvider.of<AuthRepository>(context),
-      ),
-      child: _PhoneSignIn(),
+    return BlocProvider(
+      create: (_) => PhoneSignInBloc(),
+      child: const _PhoneSignIn(),
     );
   }
 }
 
 class _PhoneSignIn extends HookWidget {
-  _PhoneSignIn({super.key});
+  const _PhoneSignIn();
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<PhoneSignInBloc, PhoneSignInState>(
       builder: (context, state) {
+        if (state.loading) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }
         switch (state) {
-          case PhoneSignInLoadingState _:
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          case PhoneSignInErrorState _:
-            return Center(
-              child: Text('ERROR: ${state.error.toString()}'),
-            );
           case PhoneSignInVerifyState _:
             return _PhoneSignInVerifyView();
-          case PhoneSignInSuccessState _:
-            BlocProvider.of<AppBloc>(context).authenticate();
-            return SizedBox();
+
           case PhoneSignInInputState _:
             return _PhoneSignInPhoneInput();
         }
@@ -54,7 +44,14 @@ class _PhoneSignIn extends HookWidget {
 class _PhoneSignInPhoneInput extends HookWidget {
   @override
   Widget build(BuildContext context) {
-    final controller = useTextEditingController();
+    final controller = useTextEditingController(text: '+995595506963'.ifDebug);
+
+    useEffect(() {
+      // context.read<PhoneSignInBloc>().changePhone(controller.text);
+      PhoneSignInBloc.of(context).changePhone(controller.text);
+
+      return null;
+    }, [controller]);
 
     return Center(
       child: Column(
@@ -94,7 +91,19 @@ class _PhoneSignInPhoneInput extends HookWidget {
             onPressed: context.read<SignInBloc>().goToPassword,
             child: const Text('Sign in with password'),
           ),
-          const SizedBox(height: 96),
+          const SizedBox(height: 24),
+          SizedBox(
+            height: 24,
+            child: BlocSelector<PhoneSignInBloc, PhoneSignInState, String?>(
+              selector: (PhoneSignInState state) => state.error,
+              builder: (context, error) => Text(
+                error ?? '',
+                style: context.textTheme.bodyMedium!
+                    .copyWith(color: context.colorScheme.error),
+              ),
+            ),
+          ),
+          const SizedBox(height: 36),
           const Text('Don\'t have an account?'),
           TextButton(
             onPressed: context.read<AppBloc>().goToSignUp,
@@ -122,7 +131,7 @@ class _PhoneSignInVerifyView extends HookWidget {
             style: context.textTheme.headlineSmall,
           ),
           const SizedBox(height: 32),
-          Text(
+          const Text(
             'We\'ve sent you a message with the code. \nCheck your incoming messages and enter the code.',
             textAlign: TextAlign.center,
           ),
@@ -136,7 +145,7 @@ class _PhoneSignInVerifyView extends HookWidget {
               },
               keyboardType: TextInputType.number,
               textAlign: TextAlign.center,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Enter your code...',
               ),
             ),

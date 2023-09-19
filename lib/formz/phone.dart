@@ -3,9 +3,11 @@ import 'package:formz/formz.dart';
 enum PhoneValidationError { empty, invalid }
 
 class Phone extends FormzInput<String, PhoneValidationError> {
-  const Phone.pure() : super.pure('');
+  const Phone.pure(String value) : super.pure(value);
 
   const Phone.dirty(String value) : super.dirty(value);
+
+  static const initial = Phone.pure('');
 
   static final validationRegex = RegExp(r'^\+\d{6,}$');
 

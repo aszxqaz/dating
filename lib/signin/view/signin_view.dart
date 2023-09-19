@@ -1,10 +1,8 @@
-import 'package:authentication_repository/authentication_repository.dart';
 import 'package:dating/signin/bloc/signin_bloc.dart';
 import 'package:dating/signin/password/password.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dating/signin/phone/phone.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SignInPage extends StatelessWidget {
   const SignInPage({super.key});
@@ -19,7 +17,7 @@ class SignInPage extends StatelessWidget {
 }
 
 class _SignInPage extends StatelessWidget {
-  const _SignInPage({super.key});
+  const _SignInPage();
 
   @override
   Widget build(BuildContext context) {

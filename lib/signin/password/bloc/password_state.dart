@@ -2,46 +2,44 @@ part of 'password_bloc.dart';
 
 @immutable
 sealed class PasswordSignInState {
-  const PasswordSignInState();
+  const PasswordSignInState({
+    this.error,
+    this.loading = false,
+  });
+
+  final String? error;
+  final bool loading;
 }
 
 final class PasswordSignInInputState extends PasswordSignInState {
   const PasswordSignInInputState({
     required this.phone,
     required this.password,
-  });
+    String? error,
+    bool loading = false,
+  }) : super(
+          error: error,
+          loading: loading,
+        );
 
-  factory PasswordSignInInputState.initial() => const PasswordSignInInputState(
-        phone: '',
-        password: '',
-      );
+  static const initial = PasswordSignInInputState(
+    phone: Phone.initial,
+    password: Password.initial,
+  );
 
-  final String phone;
-  final String password;
+  final Phone phone;
+  final Password password;
 
   PasswordSignInInputState copyWith({
-    String? phone,
-    String? password,
-  }) {
-    return PasswordSignInInputState(
-      phone: phone ?? this.phone,
-      password: password ?? this.password,
-    );
-  }
-}
-
-final class PasswordSignInLoadingState extends PasswordSignInState {
-  const PasswordSignInLoadingState();
-}
-
-final class PasswordSignInErrorState extends PasswordSignInState {
-  const PasswordSignInErrorState({
-    required this.error,
-  });
-
-  final Object error;
-}
-
-final class PasswordSignInSuccessState extends PasswordSignInState {
-  const PasswordSignInSuccessState();
+    Phone? phone,
+    Password? password,
+    String? error,
+    bool? loading,
+  }) =>
+      PasswordSignInInputState(
+        phone: phone ?? this.phone,
+        password: password ?? this.password,
+        error: error ?? this.error,
+        loading: loading ?? this.loading,
+      );
 }

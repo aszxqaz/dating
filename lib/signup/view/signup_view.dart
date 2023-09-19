@@ -1,11 +1,11 @@
-import 'package:authentication_repository/authentication_repository.dart';
 import 'package:dating/app/app.dart';
-import 'package:dating/extensions.dart';
+import 'package:dating/misc/extensions.dart';
 import 'package:dating/signup/signup.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'date_field.dart';
 
 class SignUpPage extends StatelessWidget {
   const SignUpPage({super.key});
@@ -13,44 +13,37 @@ class SignUpPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => SignUpBloc(
-        authRepository: RepositoryProvider.of<AuthRepository>(context),
-      ),
+      create: (_) => SignUpBloc(),
       child: const _SignUpPage(),
     );
   }
 }
 
 class _SignUpPage extends StatelessWidget {
-  const _SignUpPage({super.key});
+  const _SignUpPage();
 
   @override
   Widget build(BuildContext context) {
-    return RepositoryProvider(
-      create: (_) => AuthRepository(
-        supabaseClient: RepositoryProvider.of<SupabaseClient>(context),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Sign Up'),
       ),
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Sign Up'),
-        ),
-        body: BlocBuilder<SignUpBloc, SignUpState>(
-          builder: (context, state) {
-            if (state.loading) {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            }
+      body: BlocBuilder<SignUpBloc, SignUpState>(
+        builder: (context, state) {
+          if (state.loading) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
 
-            switch (state) {
-              case SignUpInputState _:
-                return _SignUpInput();
+          switch (state) {
+            case SignUpInputState _:
+              return _SignUpInput();
 
-              case SignUpVerifyState _:
-                return _SignUpVerify();
-            }
-          },
-        ),
+            case SignUpVerifyState _:
+              return _SignUpVerify();
+          }
+        },
       ),
     );
   }
@@ -61,6 +54,8 @@ class _SignUpInput extends HookWidget {
   Widget build(BuildContext context) {
     final phoneController =
         useTextEditingController(text: '+995595506963'.ifDebug);
+    final emailController =
+        useTextEditingController(text: 'maxim11@maxim.com'.ifDebug);
     final passwordController =
         useTextEditingController(text: '19920220'.ifDebug);
     final confirmedController =
@@ -68,87 +63,187 @@ class _SignUpInput extends HookWidget {
 
     useEffect(() {
       context.read<SignUpBloc>().changePhone(phoneController.text);
+      context.read<SignUpBloc>().changeEmail(emailController.text);
       context.read<SignUpBloc>().changePassword(passwordController.text);
       context.read<SignUpBloc>().changeConfirmed(confirmedController.text);
-    }, [phoneController, passwordController, confirmedController]);
 
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            'Sign Up',
-            textAlign: TextAlign.center,
-            style: context.textTheme.headlineSmall,
-          ),
-          const SizedBox(height: 32),
-          SizedBox(
-            width: 240,
-            child: TextField(
-              controller: phoneController,
-              onChanged: context.read<SignUpBloc>().changePhone,
-              keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                hintText: 'Phone number',
-                labelText: 'Phone number',
+      return null;
+    }, [
+      phoneController,
+      emailController,
+      passwordController,
+      confirmedController
+    ]);
+
+    return LayoutBuilder(builder: (context, constraints) {
+      return SingleChildScrollView(
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: constraints.maxHeight,
+            ),
+            child: IntrinsicHeight(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 48),
+                  Text(
+                    'Sign Up',
+                    textAlign: TextAlign.center,
+                    style: context.textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 32),
+                  BlocBuilder<SignUpBloc, SignUpState>(
+                      buildWhen: (p, c) =>
+                          (p as SignUpInputState).option !=
+                          (c as SignUpInputState).option,
+                      builder: (context, state) {
+                        return Column(
+                          children: [
+                            _OptionRadioGroup(
+                              option: (state as SignUpInputState).option,
+                            ),
+                            SizedBox(
+                              width: 240,
+                              child: Column(
+                                children: [
+                                  if (state.option.isPhoneOrBoth)
+                                    TextField(
+                                      controller: phoneController,
+                                      onChanged: context
+                                          .read<SignUpBloc>()
+                                          .changePhone,
+                                      keyboardType: TextInputType.phone,
+                                      decoration: const InputDecoration(
+                                        hintText: 'Phone number',
+                                        labelText: 'Phone number',
+                                      ),
+                                    ),
+                                  if (state.option.isBoth)
+                                    const SizedBox(height: 16),
+                                  if (state.option.isEmailOrBoth)
+                                    TextField(
+                                      controller: emailController,
+                                      onChanged: context
+                                          .read<SignUpBloc>()
+                                          .changeEmail,
+                                      keyboardType: TextInputType.emailAddress,
+                                      decoration: const InputDecoration(
+                                        hintText: 'Email',
+                                        labelText: 'Email',
+                                      ),
+                                    )
+                                ],
+                              ),
+                            )
+                          ],
+                        );
+                      }),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: 240,
+                    child: Column(
+                      children: [
+                        DateField(
+                          onChanged: context.read<SignUpBloc>().changeBirthdate,
+                        ),
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: passwordController,
+                          onChanged: context.read<SignUpBloc>().changePassword,
+                          keyboardType: TextInputType.text,
+                          obscureText: true,
+                          decoration: const InputDecoration(
+                            hintText: 'Password',
+                            labelText: 'Password',
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: confirmedController,
+                          onChanged: context.read<SignUpBloc>().changeConfirmed,
+                          keyboardType: TextInputType.text,
+                          obscureText: true,
+                          decoration: const InputDecoration(
+                            hintText: 'Confirm password',
+                            labelText: 'Confirm password',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  ElevatedButton(
+                    onPressed: context.read<SignUpBloc>().submit,
+                    child: const Text('Sign Up'),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    height: 24,
+                    child: BlocSelector<SignUpBloc, SignUpState, String?>(
+                      selector: (SignUpState state) =>
+                          state is SignUpInputState ? state.error : null,
+                      builder: (context, error) => Text(
+                        error ?? '',
+                        style: context.textTheme.bodyMedium!
+                            .copyWith(color: context.colorScheme.error),
+                        softWrap: true,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  const Text('Already have an account?'),
+                  TextButton(
+                    onPressed: context.read<AppBloc>().goToSignIn,
+                    child: const Text('Sign In'),
+                  ),
+                  const SizedBox(height: 16),
+                ],
               ),
             ),
           ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: 240,
-            child: TextField(
-              controller: passwordController,
-              onChanged: context.read<SignUpBloc>().changePassword,
-              keyboardType: TextInputType.text,
-              obscureText: true,
-              decoration: const InputDecoration(
-                hintText: 'Password',
-                labelText: 'Password',
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: 240,
-            child: TextField(
-              controller: confirmedController,
-              onChanged: context.read<SignUpBloc>().changeConfirmed,
-              keyboardType: TextInputType.text,
-              obscureText: true,
-              decoration: const InputDecoration(
-                hintText: 'Confirm password',
-                labelText: 'Confirm password',
-              ),
-            ),
-          ),
-          const SizedBox(height: 32),
-          ElevatedButton(
-            onPressed: context.read<SignUpBloc>().submit,
-            child: const Text('Sign Up'),
-          ),
-          const SizedBox(height: 24),
-          SizedBox(
-            height: 24,
-            child: BlocSelector<SignUpBloc, SignUpState, String?>(
-              selector: (SignUpState state) =>
-                  state is SignUpInputState ? state.error : null,
-              builder: (context, error) => Text(
-                error ?? '',
-                style: context.textTheme.bodyMedium!
-                    .copyWith(color: context.colorScheme.error),
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          const Text('Already have an account?'),
-          TextButton(
-            onPressed: context.read<AppBloc>().goToSignIn,
-            child: const Text('Sign In'),
-          ),
-        ],
-      ),
+        ),
+      );
+    });
+  }
+}
+
+class _OptionRadioGroup extends StatelessWidget {
+  const _OptionRadioGroup({
+    required this.option,
+  });
+
+  final SignUpOption option;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Radio<SignUpOption>(
+          value: SignUpOption.phone,
+          groupValue: option,
+          onChanged: context.read<SignUpBloc>().changeOption,
+        ),
+        const Text('Phone'),
+        const SizedBox(width: 24),
+        Radio<SignUpOption>(
+          value: SignUpOption.email,
+          groupValue: option,
+          onChanged: context.read<SignUpBloc>().changeOption,
+        ),
+        const Text('Email'),
+        const SizedBox(width: 24),
+        Radio<SignUpOption>(
+          value: SignUpOption.both,
+          groupValue: option,
+          onChanged: context.read<SignUpBloc>().changeOption,
+        ),
+        const Text('Both'),
+        const SizedBox(width: 16),
+      ],
     );
   }
 }
