@@ -1,4 +1,5 @@
 import 'package:dating/supabase/models/location.dart';
+import 'package:dating/supabase/models/preferences.dart';
 import 'package:equatable/equatable.dart';
 
 import 'photo.dart';
@@ -56,6 +57,7 @@ class Profile {
     required this.orientation,
     required this.photos,
     required this.location,
+    required this.prefs,
   });
 
   final String userId;
@@ -65,18 +67,22 @@ class Profile {
   final int orientation;
   final Iterable<Photo> photos;
   final UserLocation location;
+  final Preferences prefs;
 
   Iterable<String> get photoUrls => photos.map((photo) => photo.url);
 
   factory Profile.fromJson(Map<String, dynamic> json) {
-    var location = UserLocation.empty;
-    if (json['locations'] != null) {
-      location = UserLocation.fromJson(json['locations']);
-    }
+    final location = json['locations'] != null
+        ? UserLocation.fromJson(json['locations'])
+        : UserLocation.empty;
 
     final photos = (json['photos'] as List).cast<Map<String, dynamic>>().map(
           (photo) => Photo.fromJson(photo),
         );
+
+    final prefs = json['prefs'] != null
+        ? Preferences.fromJson(json['prefs'])
+        : Preferences.empty;
 
     return Profile(
       userId: json['user_id'],
@@ -86,8 +92,29 @@ class Profile {
       orientation: json['orientation'] ?? 0,
       photos: photos,
       location: location,
+      prefs: prefs,
     );
   }
+
+  Profile copyWith({
+    String? name,
+    DateTime? birthdate,
+    bool? male,
+    int? orientation,
+    Iterable<Photo>? photos,
+    UserLocation? location,
+    Preferences? prefs,
+  }) =>
+      Profile(
+        userId: userId,
+        name: name ?? this.name,
+        birthdate: birthdate ?? this.birthdate,
+        male: male ?? this.male,
+        orientation: orientation ?? this.orientation,
+        photos: photos ?? this.photos,
+        location: location ?? this.location,
+        prefs: prefs ?? this.prefs,
+      );
 
   @override
   toString() =>

@@ -7,16 +7,15 @@ extension Describe on PrefenrecesLookingFor {
   String display(BuildContext context) {
     switch (this) {
       case PrefenrecesLookingFor.longterm:
-        AppLocalizations
+        return AppLocalizations.of(context)!.longterm;
       case PrefenrecesLookingFor.longOrShort:
-      // TODO: Handle this case.
+        return AppLocalizations.of(context)!.longOrShort;
       case PrefenrecesLookingFor.justFun:
-      // TODO: Handle this case.
+        return AppLocalizations.of(context)!.justFun;
       case PrefenrecesLookingFor.friends:
-      // TODO: Handle this case.
+        return AppLocalizations.of(context)!.friends;
       case PrefenrecesLookingFor.dontKnow:
-        // TODO: Handle this case.
-        return '';
+        return AppLocalizations.of(context)!.dontKnow;
     }
   }
 }

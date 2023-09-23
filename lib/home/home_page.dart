@@ -11,6 +11,10 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:dating/misc/extensions.dart';
 import 'package:dating/home/bloc/home_bloc.dart';
 
+final homeBloc = HomeBloc();
+final hotBloc = HotBloc();
+final userBloc = UserBloc();
+
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
@@ -20,10 +24,7 @@ class HomePage extends StatelessWidget {
       create: (_) => HomeBloc(),
       child: BlocProvider(
         create: (_) => HotBloc(),
-        child: BlocProvider(
-          create: (_) => UserBloc(),
-          child: _HomePage(),
-        ),
+        child: _HomePage(),
       ),
     );
   }

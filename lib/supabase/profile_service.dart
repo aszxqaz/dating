@@ -1,19 +1,21 @@
 part of 'service.dart';
 
 mixin _ProfileService on _BaseSupabaseService {
-  Future<ProfileTable?> findProfileByUserId([String? userId]) async {
+  Future<Profile?> findProfileByUserId([String? userId]) async {
     final id = userId ?? globalUser?.id;
     if (id == null) return null;
 
-    final json = await supabaseClient
-        .from('profiles')
-        .select<Map<String, dynamic>?>()
-        .eq('user_id', id)
-        .maybeSingle();
+    final json =
+        await supabaseClient.from('profiles').select<Map<String, dynamic>?>('''
+          *,
+          photos (*),
+          locations (*),
+          preferences (*)
+        ''').eq('user_id', id).maybeSingle();
 
     if (json == null) return null;
 
-    return ProfileTable.fromJson(json);
+    return Profile.fromJson(json);
   }
 
   Future<List<Profile>> findAllProfiles() async {
@@ -21,8 +23,13 @@ mixin _ProfileService on _BaseSupabaseService {
 
     final list = await supabaseClient.from('profiles').select<List>('''
       *,
-      photos (*),
-      locations (*)
+      photos (
+        *, photo_likes (
+          *
+        )
+      ),
+      locations (*),
+      preferences (*)
     ''');
 
     final profiles = (list.cast<Map<String, dynamic>>())
@@ -30,6 +37,11 @@ mixin _ProfileService on _BaseSupabaseService {
         .toList();
 
     debugPrint('--- FETCHED PROFILES: ${profiles.toString()}');
+
+    for (final profile in profiles) {
+      debugPrint(
+          '--- FETCHED PHOTOS: ${profile.photos.map((p) => p.likes).toString()}');
+    }
 
     return profiles;
   }

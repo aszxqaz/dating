@@ -8,23 +8,6 @@ enum HomeTabs {
   user;
 
   static HomeTabs initial = HomeTabs.slides;
-
-  static HomeTabs fromJson(int index) {
-    switch (index) {
-      case 0:
-        return HomeTabs.feed;
-      case 1:
-        return HomeTabs.notifications;
-      case 2:
-        return HomeTabs.slides;
-      case 3:
-        return HomeTabs.messages;
-      case 4:
-        return HomeTabs.user;
-      default:
-        return HomeTabs.initial;
-    }
-  }
 }
 
 @immutable
@@ -63,6 +46,4 @@ extension HomeTabsDisplay on HomeTabs {
         return 'My Profile';
     }
   }
-
-  int toJson() => index;
 }

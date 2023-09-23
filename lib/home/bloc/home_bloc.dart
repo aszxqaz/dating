@@ -111,13 +111,13 @@ class HomeBloc extends HydratedBloc<HomeEvent, HomeState> {
 
   @override
   HomeState? fromJson(Map<String, dynamic> json) => HomeState(
-        tab: HomeTabs.fromJson(json['tab']),
+        tab: HomeTabs.values[json['tab']],
         location: UserLocation.fromJson(json['location']),
       );
 
   @override
   Map<String, dynamic>? toJson(HomeState state) => {
-        'tab': state.tab.toJson(),
+        'tab': state.tab.index,
         'location': state.location.toJson(),
       };
 }
