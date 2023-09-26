@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:location/location.dart';
 
 class CurrentCoords {
@@ -8,6 +9,8 @@ class CurrentCoords {
 }
 
 Future<CurrentCoords?> getLocationCoords() async {
+  if (defaultTargetPlatform == TargetPlatform.windows) return null;
+
   Location location = Location();
 
   bool serviceEnabled;

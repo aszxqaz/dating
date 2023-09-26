@@ -1,29 +1,25 @@
-import 'dart:convert';
+part of 'chat_view.dart';
 
-import 'package:collection/collection.dart';
-import 'package:dating/chat/chat_message.dart';
-import 'package:dating/chat/chat_message/converter.dart';
-import 'package:dating/misc/extensions.dart';
-import 'package:extended_text_field/extended_text_field.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-
-class ChatMessageWidget extends StatelessWidget {
-  const ChatMessageWidget({
+class _ChatMessageWidget extends HookWidget {
+  const _ChatMessageWidget({
     super.key,
     required this.message,
+    required this.color,
   });
 
-  final ChatMessage message;
+  final ChatMessageNew message;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
+    final dateTime = DateTime.now();
+    final hasTime = message.createdAt != null;
+
     return ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: 200),
+      constraints: const BoxConstraints(maxWidth: 200),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.lightBlue,
+          color: color,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Padding(
@@ -31,64 +27,40 @@ class ChatMessageWidget extends StatelessWidget {
             horizontal: 10.0,
             vertical: 8.0,
           ),
-          child: Text.rich(
-            TextSpan(
-                children:
-                    message.chatMessageElements.map((e) => e.build()).toList()
-
-                // children: chunks.fold(
-                //   <InlineSpan>[],
-                //   (children, chunk) {
-                //     debugPrint('chunkkkkkk end ' + chunk.end.toString());
-
-                //     final emojis = message.emojis.where((emoji) =>
-                //         emoji.pos >= chunk.start && emoji.pos < chunk.end);
-
-                //     List<InlineSpan> widgets = [];
-                //     int lastEmojiPos = 0;
-
-                //     for (final emoji in emojis) {
-                //       if (emoji.pos < chunk.end) {
-                //         final sub = chunk.text
-                //             .substring(lastEmojiPos, emoji.pos - chunk.start);
-
-                //         widgets.add(
-                //             TextChatMessageElement(pos: 0, text: sub).build());
-                //         widgets.add(EmojiChatMessageElement(pos: 0, emoji: emoji)
-                //             .build());
-
-                //         lastEmojiPos = emoji.pos - chunk.start;
-                //       } else {
-                //         widgets.add(const TextSpan(text: '\n'));
-                //         widgets.add(EmojiChatMessageElement(pos: 0, emoji: emoji)
-                //             .build());
-                //       }
-                //     }
-
-                //     final sub = chunk.text
-                //         .substring(lastEmojiPos, chunk.end - chunk.start);
-
-                //     if (sub.isNotEmpty) {
-                //       widgets
-                //           .add(TextChatMessageElement(pos: 0, text: sub).build());
-                //     }
-
-                //     debugPrint('chunks text len ' + chunksTextLen.toString());
-                //     debugPrint('chunk end' + chunk.end.toString());
-
-                //     return [
-                //       ...children!,
-                //       ...widgets,
-                //       if (chunk.end != chunksTextLen &&
-                //           lastEmojiPos + 1 != chunksTextLen)
-                //         const TextSpan(text: '\n'),
-                //     ];
-                //   },
-                // ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                message.text,
+                style: const TextStyle(
+                  color: Colors.white,
                 ),
-            style: TextStyle(
-              color: Colors.white,
-            ),
+                softWrap: true,
+              ),
+              Row(
+                children: [
+                  const Spacer(),
+                  if (hasTime) ...[
+                    Text(
+                      message.createdAt!.localTime,
+                      style: context.textTheme.bodySmall!
+                          .copyWith(color: Colors.white),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.check,
+                      size: 12,
+                      color: Colors.white,
+                    ),
+                  ] else
+                    const Icon(
+                      Icons.sync_outlined,
+                      size: 12,
+                      color: Colors.white,
+                    ),
+                ],
+              ),
+            ],
           ),
         ),
       ),

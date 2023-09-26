@@ -4,6 +4,7 @@ import 'package:dating/misc/geocoding.dart';
 import 'package:dating/misc/location_service.dart';
 import 'package:dating/supabase/models/location.dart';
 import 'package:dating/supabase/service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:location/location.dart';
@@ -36,24 +37,26 @@ class HomeBloc extends HydratedBloc<HomeEvent, HomeState> {
 
     on<LocationRequested>((_, emit) async {});
 
-    Location().changeSettings(interval: 500000);
+    if (defaultTargetPlatform != TargetPlatform.windows) {
+      Location().changeSettings(interval: 500000);
 
-    _locationSubscription = Location().onLocationChanged.listen(
-      (data) async {
-        if (data.latitude != null && data.longitude != null) {
-          final curCoords = CurrentCoords(
-            latitude: data.latitude!,
-            longitude: data.longitude!,
-          );
+      _locationSubscription = Location().onLocationChanged.listen(
+        (data) async {
+          if (data.latitude != null && data.longitude != null) {
+            final curCoords = CurrentCoords(
+              latitude: data.latitude!,
+              longitude: data.longitude!,
+            );
 
-          final location = await _fetchLocationIfCoordsChanged(curCoords);
+            final location = await _fetchLocationIfCoordsChanged(curCoords);
 
-          if (location != null) {
-            add(LocationChanged(location));
+            if (location != null) {
+              add(LocationChanged(location));
+            }
           }
-        }
-      },
-    );
+        },
+      );
+    }
   }
 
   void setTab(HomeTabs tab) {

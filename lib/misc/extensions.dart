@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -30,5 +32,22 @@ extension LightenDarken on Color {
         hsl.withLightness((hsl.lightness + amount).clamp(0.0, 1.0));
 
     return hslLight.toColor();
+  }
+}
+
+const encoder = JsonEncoder.withIndent("     ");
+
+extension PrettyJsonString on Object {
+  String toPrettyJson() {
+    return encoder.convert(this);
+  }
+}
+
+extension ToLocalTime on DateTime {
+  String get localTime {
+    final local = toLocal();
+    final hour = local.hour.toString().padLeft(2, '0');
+    final minute = local.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
   }
 }

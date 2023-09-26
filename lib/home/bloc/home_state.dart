@@ -21,7 +21,7 @@ final class HomeState {
   final UserLocation location;
 
   static const initial = HomeState(
-    tab: HomeTabs.user,
+    tab: HomeTabs.slides,
     location: UserLocation.empty,
   );
 

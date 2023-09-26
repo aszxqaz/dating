@@ -1,5 +1,5 @@
 import 'package:dating/hot/models/hot_card.dart';
-import 'package:dating/supabase/models/model.dart';
+import 'package:dating/supabase/models/models.dart';
 import 'package:dating/supabase/service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

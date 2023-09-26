@@ -1,5 +1,17 @@
 import 'package:dating/preferences/preferences.dart';
 
+class _PrefsHSMap {
+  static const children = '0';
+  static const lookingFor = '1';
+  static const alcohol = '2';
+  static const education = '3';
+  static const lovelang = '4';
+  static const nutrition = '5';
+  static const pets = '6';
+  static const smoking = '7';
+  static const workout = '8';
+}
+
 class Preferences {
   const Preferences({
     required this.children,
@@ -52,6 +64,49 @@ class Preferences {
             ? PrefsNutrition.values[json['nutrition']]
             : null,
       );
+
+  factory Preferences.fromHydratedJson(Map<String, dynamic> json) =>
+      Preferences(
+        alcohol: json[_PrefsHSMap.alcohol] != null
+            ? PrefsAlcohol.values[json[_PrefsHSMap.alcohol]]
+            : null,
+        children: json[_PrefsHSMap.children] != null
+            ? PrefsChildren.values[json[_PrefsHSMap.children]]
+            : null,
+        lookingFor: json[_PrefsHSMap.lookingFor] != null
+            ? PrefsLookingFor.values[json[_PrefsHSMap.lookingFor]]
+            : null,
+        education: json[_PrefsHSMap.education] != null
+            ? PrefsEducation.values[json[_PrefsHSMap.education]]
+            : null,
+        workout: json[_PrefsHSMap.workout] != null
+            ? PrefsWorkout.values[json[_PrefsHSMap.workout]]
+            : null,
+        pets: json[_PrefsHSMap.pets] != null
+            ? PrefsPets.values[json[_PrefsHSMap.pets]]
+            : null,
+        lovelang: json[_PrefsHSMap.lovelang] != null
+            ? PrefsLoveLanguage.values[json[_PrefsHSMap.lovelang]]
+            : null,
+        smoking: json[_PrefsHSMap.smoking] != null
+            ? PrefsSmoking.values[json[_PrefsHSMap.smoking]]
+            : null,
+        nutrition: json[_PrefsHSMap.nutrition] != null
+            ? PrefsNutrition.values[json[_PrefsHSMap.nutrition]]
+            : null,
+      );
+
+  Map<String, dynamic> toHydratedJson() => {
+        _PrefsHSMap.alcohol: alcohol?.index,
+        _PrefsHSMap.children: children?.index,
+        _PrefsHSMap.education: education?.index,
+        _PrefsHSMap.lookingFor: lookingFor?.index,
+        _PrefsHSMap.lovelang: lovelang?.index,
+        _PrefsHSMap.nutrition: nutrition?.index,
+        _PrefsHSMap.pets: pets?.index,
+        _PrefsHSMap.smoking: smoking?.index,
+        _PrefsHSMap.workout: workout?.index,
+      };
 
   final PrefsChildren? children;
   final PrefsLookingFor? lookingFor;

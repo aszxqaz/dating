@@ -24,6 +24,14 @@ class Photo {
             : [],
       );
 
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'user_id': userId,
+        'link': url,
+        'created_at': uploadedAt.toIso8601String(),
+        'photo_likes': likes.map((like) => like.toJson()),
+      };
+
   @override
   toString() => 'Photo (id: *, userId: *, link: $url, likes: $likes.length)';
 }
@@ -41,4 +49,9 @@ class PhotoLike {
         photoId: json['photo_id'],
         userId: json['user_id'],
       );
+
+  Map<String, dynamic> toJson() => {
+        'photo_id': photoId,
+        'user_id': userId,
+      };
 }

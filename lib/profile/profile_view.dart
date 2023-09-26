@@ -1,8 +1,11 @@
 import 'package:dating/assets/icons.dart';
 import 'package:dating/chat/chat_view.dart';
+import 'package:dating/chatslist/bloc/chats_bloc.dart';
+import 'package:dating/features/chat/chats_new_bloc.dart';
+import 'package:dating/features/profiles/profiles_bloc.dart';
 import 'package:dating/misc/extensions.dart';
 import 'package:dating/misc/photos_preloader.dart';
-import 'package:dating/supabase/models/model.dart';
+import 'package:dating/supabase/models/models.dart';
 import 'package:dating/user/user_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,8 +20,15 @@ part 'profile_cubit.dart';
 class ProfilePage extends HookWidget {
   const ProfilePage({super.key, required this.profile});
 
-  static route(Profile profile) => MaterialPageRoute(
-        builder: (_) => ProfilePage(profile: profile),
+  static route({
+    required BuildContext context,
+    required Profile profile,
+  }) =>
+      MaterialPageRoute(
+        builder: (_) => MultiBlocProvider(providers: [
+          BlocProvider(create: (_) => context.read<ChatsNewBloc>()),
+          BlocProvider(create: (_) => context.read<ProfilesBloc>()),
+        ], child: ProfilePage(profile: profile)),
       );
 
   final Profile profile;
@@ -212,7 +222,12 @@ class ProfilePage extends HookWidget {
                         top: -16,
                         child: FilledIconButton(
                           onPressed: () {
-                            Navigator.of(context).push(Chat.route);
+                            Navigator.of(context).push(
+                              ChatView.route(
+                                context: context,
+                                partnerId: profile.userId,
+                              ),
+                            );
                           },
                           icon: Icons.message,
                           offset: const Offset(0, 2),
@@ -224,7 +239,9 @@ class ProfilePage extends HookWidget {
                         width: width,
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 16),
+                            horizontal: 8,
+                            vertical: 16,
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -262,7 +279,7 @@ class _SliderIndicator extends StatelessWidget {
   final int activeIndex;
   final int count;
 
-  static const opacities = [0.22, 0.17, 0.1, 0.05];
+  // static const opacities = [0.22, 0.17, 0.1, 0.05];
   // static const circleSize
 
   @override

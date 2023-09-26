@@ -30,7 +30,7 @@ mixin _ProfileService on _BaseSupabaseService {
       ),
       locations (*),
       preferences (*)
-    ''');
+    ''').neq('user_id', globalUser!.id);
 
     final profiles = (list.cast<Map<String, dynamic>>())
         .map((profile) => Profile.fromJson(profile))

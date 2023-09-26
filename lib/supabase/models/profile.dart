@@ -1,52 +1,4 @@
-import 'package:dating/supabase/models/location.dart';
-import 'package:dating/supabase/models/preferences.dart';
-import 'package:equatable/equatable.dart';
-
-import 'photo.dart';
-
-class PhotoTable extends Equatable {
-  const PhotoTable({
-    required this.id,
-    required this.userId,
-    required this.link,
-  });
-
-  final String id;
-  final String userId;
-  final String link;
-
-  @override
-  List<Object?> get props => [id, userId, link];
-
-  factory PhotoTable.fromJson(Map<String, dynamic> json) => PhotoTable(
-        id: json['id'],
-        userId: json['user_id'],
-        link: json['link'],
-      );
-}
-
-class ProfileTable {
-  const ProfileTable(
-      {required this.userId,
-      required this.name,
-      required this.birthdate,
-      required this.male,
-      required this.orientation});
-
-  final String userId;
-  final String name;
-  final DateTime birthdate;
-  final bool male;
-  final int orientation;
-
-  factory ProfileTable.fromJson(Map<String, dynamic> json) => ProfileTable(
-        userId: json['user_id'],
-        name: json['name'],
-        birthdate: DateTime.parse(json['birthdate']),
-        male: json['male'],
-        orientation: json['orientation'],
-      );
-}
+import 'package:dating/supabase/models/models.dart';
 
 class Profile {
   const Profile({
@@ -65,20 +17,26 @@ class Profile {
   final DateTime birthdate;
   final bool male;
   final int orientation;
-  final Iterable<Photo> photos;
+  final List<Photo> photos;
   final UserLocation location;
   final Preferences prefs;
 
   Iterable<String> get photoUrls => photos.map((photo) => photo.url);
+  String? get avatarUrl => hasPhotos ? photos.first.url : null;
+  bool get hasAvatar => avatarUrl != null;
+  bool get hasPhotos => photos.isNotEmpty;
 
   factory Profile.fromJson(Map<String, dynamic> json) {
     final location = json['locations'] != null
         ? UserLocation.fromJson(json['locations'])
         : UserLocation.empty;
 
-    final photos = (json['photos'] as List).cast<Map<String, dynamic>>().map(
+    final photos = (json['photos'] as List)
+        .cast<Map<String, dynamic>>()
+        .map(
           (photo) => Photo.fromJson(photo),
-        );
+        )
+        .toList();
 
     final prefs = json['prefs'] != null
         ? Preferences.fromJson(json['prefs'])
@@ -96,12 +54,23 @@ class Profile {
     );
   }
 
+  Map<String, dynamic> toJson() => {
+        'user_id': userId,
+        'name': name,
+        'birthdate': birthdate.toIso8601String(),
+        'male': male,
+        'orientation': orientation,
+        'photos': photos.map((photo) => photo.toJson()).toList(),
+        'location': location.toJson(),
+        'prefs': prefs.toJson(),
+      };
+
   Profile copyWith({
     String? name,
     DateTime? birthdate,
     bool? male,
     int? orientation,
-    Iterable<Photo>? photos,
+    List<Photo>? photos,
     UserLocation? location,
     Preferences? prefs,
   }) =>

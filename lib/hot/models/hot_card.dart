@@ -1,4 +1,4 @@
-import 'package:dating/supabase/models/model.dart';
+import 'package:dating/supabase/models/models.dart';
 import 'package:dating/supabase/models/photo.dart';
 import 'package:flutter/material.dart';
 import 'package:timeago/timeago.dart' as timeago;

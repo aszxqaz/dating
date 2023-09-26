@@ -1,5 +1,9 @@
 import 'package:dating/app/app.dart';
 import 'package:dating/assets/icons.dart';
+import 'package:dating/chatslist/bloc/chats_bloc.dart';
+import 'package:dating/chatslist/chatslist_view.dart';
+import 'package:dating/chatslist/chatslist_view_new.dart';
+import 'package:dating/features/features.dart';
 import 'package:dating/hot/bloc/hot_bloc.dart';
 import 'package:dating/hot/hot.dart';
 import 'package:dating/user/bloc/user_bloc.dart';
@@ -24,7 +28,17 @@ class HomePage extends StatelessWidget {
       create: (_) => HomeBloc(),
       child: BlocProvider(
         create: (_) => HotBloc(),
-        child: _HomePage(),
+        child: MultiBlocProvider(
+          providers: [
+            BlocProvider<ProfilesBloc>(
+              create: (_) => ProfilesBloc(),
+            ),
+            BlocProvider<ChatsNewBloc>(
+              create: (_) => ChatsNewBloc(),
+            ),
+          ],
+          child: _HomePage(),
+        ),
       ),
     );
   }
@@ -67,9 +81,9 @@ class _HomePage extends HookWidget {
                 case HomeTabs.notifications:
                   return const Text('Notifications');
                 case HomeTabs.slides:
-                  return const HotPage();
+                  return const HotPageNew();
                 case HomeTabs.messages:
-                  return const Text('Messages');
+                  return ChatsListNew();
                 case HomeTabs.user:
                   return const UserView();
               }
@@ -99,42 +113,56 @@ class _HomeBottomNavigationBar extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        child: BlocBuilder<HomeBloc, HomeState>(builder: (context, state) {
-          return Row(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _BottomNavigationBarIconButton(
-                onPressed: () => context.read<HomeBloc>().setTab(HomeTabs.feed),
-                isActive: state.tab == HomeTabs.feed,
-                src: 'assets/icons/paper_plane.svg',
-              ),
-              _BottomNavigationBarIconButton(
-                onPressed: () =>
-                    context.read<HomeBloc>().setTab(HomeTabs.notifications),
-                isActive: state.tab == HomeTabs.notifications,
-                src: 'assets/icons/bell.svg',
-              ),
-              _BottomNavigationBarIconButton(
-                onPressed: () =>
-                    context.read<HomeBloc>().setTab(HomeTabs.slides),
-                isActive: state.tab == HomeTabs.slides,
-                src: 'assets/icons/hot.svg',
-              ),
-              _BottomNavigationBarIconButton(
-                onPressed: () =>
-                    context.read<HomeBloc>().setTab(HomeTabs.messages),
-                isActive: state.tab == HomeTabs.messages,
-                src: 'assets/icons/message.svg',
-              ),
-              _BottomNavigationBarIconButton(
-                onPressed: () => context.read<HomeBloc>().setTab(HomeTabs.user),
-                isActive: state.tab == HomeTabs.user,
-                src: 'assets/icons/user.svg',
-              ),
-            ],
-          );
-        }),
+        child: BlocBuilder<HomeBloc, HomeState>(
+          builder: (context, state) {
+            return Row(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _BottomNavigationBarIconButton(
+                  onPressed: () =>
+                      context.read<HomeBloc>().setTab(HomeTabs.feed),
+                  isActive: state.tab == HomeTabs.feed,
+                  src: 'assets/icons/paper_plane.svg',
+                ),
+                _BottomNavigationBarIconButton(
+                  onPressed: () =>
+                      context.read<HomeBloc>().setTab(HomeTabs.notifications),
+                  isActive: state.tab == HomeTabs.notifications,
+                  src: 'assets/icons/bell.svg',
+                ),
+                _BottomNavigationBarIconButton(
+                  onPressed: () =>
+                      context.read<HomeBloc>().setTab(HomeTabs.slides),
+                  isActive: state.tab == HomeTabs.slides,
+                  src: 'assets/icons/hot.svg',
+                ),
+                BlocSelector<ChatsNewBloc, ChatsNewState, int>(
+                  selector: (state) => state.unreadCount,
+                  builder: (context, count) {
+                    return Badge(
+                      isLabelVisible: count > 0,
+                      label: Text(count.toString()),
+                      backgroundColor: Colors.green.shade600,
+                      child: _BottomNavigationBarIconButton(
+                        onPressed: () =>
+                            context.read<HomeBloc>().setTab(HomeTabs.messages),
+                        isActive: state.tab == HomeTabs.messages,
+                        src: 'assets/icons/message.svg',
+                      ),
+                    );
+                  },
+                ),
+                _BottomNavigationBarIconButton(
+                  onPressed: () =>
+                      context.read<HomeBloc>().setTab(HomeTabs.user),
+                  isActive: state.tab == HomeTabs.user,
+                  src: 'assets/icons/user.svg',
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

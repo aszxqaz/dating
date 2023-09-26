@@ -18,6 +18,6 @@
     ".flutter-plugins": true,
     ".flutter-plugins-dependencies": true,
     // ".env": true,
-    "build": true
+    "build": false
   }
 }
