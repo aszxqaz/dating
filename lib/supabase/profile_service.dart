@@ -1,48 +1,113 @@
 part of 'service.dart';
 
-mixin _ProfileService on _BaseSupabaseService {
-  Future<Profile?> findProfileByUserId([String? userId]) async {
-    final id = userId ?? globalUser?.id;
-    if (id == null) return null;
+class FetchUserProfileResponse {
+  const FetchUserProfileResponse({required this.profile});
+  final Profile? profile;
+}
 
-    final json =
-        await supabaseClient.from('profiles').select<Map<String, dynamic>?>('''
-          *,
-          photos (*),
-          locations (*),
-          preferences (*)
-        ''').eq('user_id', id).maybeSingle();
+class CreateProfileArgs {
+  const CreateProfileArgs({required this.birthdate, required this.name});
+  final DateTime birthdate;
+  final String name;
+}
 
-    if (json == null) return null;
+mixin _ProfileService on _SupabaseService {
+  static const profileQuery = '''
+    *,
+    photos (
+      *, photo_likes (
+        *
+      )
+    ),
+    locations (*),
+    preferences (*)
+  ''';
 
-    return Profile.fromJson(json);
+  // ---
+  // --- CREATE PROFILE
+  // ---
+  Future<Profile?> createProfile(DateTime birthdate, String name) async {
+    return tryExecute('createProfile', () async {
+      return await supabaseClient.from('profiles').insert({
+        'user_id': requireUserId,
+        'name': name,
+        'birthdate': birthdate.toUtc().toIso8601String(),
+      }).select();
+    });
   }
 
-  Future<List<Profile>> findAllProfiles() async {
-    if (globalUser == null) return [];
-
-    final list = await supabaseClient.from('profiles').select<List>('''
-      *,
-      photos (
-        *, photo_likes (
-          *
-        )
-      ),
-      locations (*),
-      preferences (*)
-    ''').neq('user_id', globalUser!.id);
-
-    final profiles = (list.cast<Map<String, dynamic>>())
-        .map((profile) => Profile.fromJson(profile))
-        .toList();
-
-    debugPrint('--- FETCHED PROFILES: ${profiles.toString()}');
-
-    for (final profile in profiles) {
+  // ---
+  // --- FETCH USER PROFILE
+  // ---
+  Future<Profile?> fetchUserProfile() async {
+    return tryExecute('fetchUserProfile', () async {
       debugPrint(
-          '--- FETCHED PHOTOS: ${profile.photos.map((p) => p.likes).toString()}');
-    }
+          '[ProfileService] fetching user profile with user_id: $requireUserId');
+      final json = await supabaseClient
+          .from('profiles')
+          .select<Map<String, dynamic>>(profileQuery)
+          .eq('user_id', requireUserId)
+          .single();
 
-    return profiles;
+      return Profile.fromJson(json);
+    });
+  }
+
+  // ---
+  // --- FETCH PROFILE BY USER ID
+  // ---
+  Future<Profile?> fetchProfile(String userId) async {
+    return tryExecute('findProfileByUserId', () async {
+      final json = await supabaseClient
+          .from('profiles')
+          .select<Map<String, dynamic>>(profileQuery)
+          .eq('user_id', userId)
+          .single();
+
+      return Profile.fromJson(json);
+    });
+  }
+
+  // ---
+  // --- FETCH MANY PROFILES
+  // ---
+  Future<List<Profile>?> fetchProfiles(List<String> profileIds) async {
+    return tryExecute('findProfiles', () async {
+      final json = await supabaseClient
+          .from('profiles')
+          .select<List<Map<String, dynamic>>>(profileQuery)
+          .in_('user_id', profileIds);
+
+      return json.map(Profile.fromJson).toList();
+    });
+  }
+
+  // ---
+  // --- FETCH ALL PROFILES
+  // ---
+  Future<List<Profile>?> fetchCardsProfiles() async {
+    return tryExecute('findAllProfiles', () async {
+      final list = await supabaseClient
+          .from('profiles')
+          .select<List<Map<String, dynamic>>>(profileQuery)
+          .neq('user_id', globalUser!.id);
+
+      final profiles = list.map(Profile.fromJson).toList();
+
+      return profiles;
+    });
+  }
+
+  // ---
+  // --- UPDATE LAST SEEN
+  // ---
+  Future<bool?> updateLastSeen() async {
+    return tryExecute('updateLastSeen', () async {
+      await supabaseClient
+          .from('profiles')
+          .update({'last_seen': DateTime.now().toUtc().toIso8601String()}).eq(
+              'user_id', requireUser.id);
+      return true;
+    });
   }
 }

@@ -62,20 +62,21 @@ class AuthService {
       }
 
       // final session = response.session as Session;
-      final user = response.user as User;
+      // final user = response.user as User;
 
-      final profile = await supabaseClient
-          .from('profiles')
-          .select()
-          .eq('user_id', user.id)
-          .maybeSingle();
+      // final profile = await supabaseClient
+      //     .from('profiles')
+      //     .select()
+      //     .eq('user_id', user.id)
+      //     .maybeSingle();
 
-      if (profile == null) {
-        await supabaseClient.from('profiles').insert({
-          'user_id': user.id,
-          'birthdate': birthdate,
-        });
-      }
+      // if (profile == null) {
+      //   await supabaseClient.from('profiles').insert({
+      //     'user_id': user.id,
+      //     'birthdate': birthdate,
+      //   });
+      //   debugPrint('SIGN UP: NEW PROFILE REGISTERED');
+      // }
     } on AuthException catch (err) {
       throw AuthenticationError(err.message);
     } on AuthenticationError catch (_) {

@@ -1,29 +1,33 @@
 part of 'home_bloc.dart';
 
 @immutable
-sealed class HomeEvent {
-  const HomeEvent();
+sealed class _HomeEvent {
+  const _HomeEvent();
 }
 
-final class HomeTabChanged extends HomeEvent {
-  const HomeTabChanged({required this.tab});
+final class _HomeTabChanged extends _HomeEvent {
+  const _HomeTabChanged({required this.tab});
   final HomeTabs tab;
 }
 
-final class LocationRequested extends HomeEvent {
-  const LocationRequested();
+final class _LocationRequested extends _HomeEvent {
+  const _LocationRequested();
 }
 
-final class LocationChanged extends HomeEvent {
-  const LocationChanged(this.location);
+final class _LocationChanged extends _HomeEvent {
+  const _LocationChanged(this.location);
 
   final UserLocation location;
 }
 
-final class LocationSubscriptionStarted extends HomeEvent {
-  const LocationSubscriptionStarted();
+final class _LocationSubscriptionRequested extends _HomeEvent {
+  const _LocationSubscriptionRequested();
 }
 
-final class LocationSubscriptionEnded extends HomeEvent {
-  const LocationSubscriptionEnded();
+final class _LastSeenSubscriptionRequested extends _HomeEvent {
+  const _LastSeenSubscriptionRequested();
+}
+
+final class _LocationSubscriptionEnded extends _HomeEvent {
+  const _LocationSubscriptionEnded();
 }

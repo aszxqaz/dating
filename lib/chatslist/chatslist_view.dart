@@ -1,113 +1,148 @@
-// // ignore_for_file: prefer_const_constructors
+import 'package:collection/collection.dart';
+import 'package:dating/assets/icons.dart';
+import 'package:dating/chat/chat_view.dart';
+import 'package:dating/common/online_label.dart';
+import 'package:dating/features/features.dart';
+import 'package:dating/misc/datetime_ext.dart';
+import 'package:dating/misc/extensions.dart';
+import 'package:dating/common/profile_photo.dart';
+import 'package:dating/supabase/service.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
-// import 'package:dating/assets/icons.dart';
-// import 'package:dating/chat/bloc/chat_bloc.dart';
-// import 'package:dating/chat/chat_view.dart';
-// import 'package:dating/chatslist/bloc/chats_bloc.dart';
-// import 'package:dating/misc/extensions.dart';
-// import 'package:dating/supabase/service.dart';
-// import 'package:flutter/material.dart';
-// import 'package:flutter_bloc/flutter_bloc.dart';
-// import 'package:flutter_hooks/flutter_hooks.dart';
-// import 'package:flutter_svg/flutter_svg.dart';
+class ChatsList extends HookWidget {
+  const ChatsList({
+    super.key,
+  });
 
-// class ChatsList extends HookWidget {
-//   const ChatsList({
-//     super.key,
-//     this.chats,
-//   });
+  @override
+  Widget build(BuildContext context) {
+    return BlocSelector<ChatsBloc, ChatsState, List<Chat>>(
+      selector: (state) => state.chats,
+      builder: (context, chats) {
+        final sorted = chats
+            .whereNot((chat) => chat.messages.isEmpty)
+            .sortedBy((chat) => chat.lastMessage.createdAt)
+            .reversed;
 
-//   final List<ChatExt>? chats;
+        return chats.isNotEmpty
+            ? ListView(
+                children: (sorted)
+                    .map((chat) => _ChatListViewItem(chat: chat))
+                    .toList(),
+              )
+            : Center(
+                child: Column(
+                  children: [
+                    const Spacer(),
+                    SvgPicture.asset(
+                      IconAssets.loveLetterBig,
+                      width: 120,
+                      colorFilter: ColorFilter.mode(
+                        context.colorScheme.primary.withAlpha(200),
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No messages yet.\nWrite somebody.',
+                      style: context.textTheme.titleLarge,
+                      textAlign: TextAlign.center,
+                    ),
+                    const Spacer(),
+                  ],
+                ),
+              );
+      },
+    );
+  }
+}
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return BlocBuilder<ChatsBloc, ChatsState>(
-//       builder: (context, state) {
-//         return ListView(
-//           children: (state.chats)
-//               .map((chat) => _ChatListViewItem(chat: chat))
-//               .toList(),
-//         );
-//       },
-//     );
-//   }
-// }
+class _ChatListViewItem extends StatelessWidget {
+  const _ChatListViewItem({
+    required this.chat,
+  });
 
-// class _ChatListViewItem extends StatelessWidget {
-//   const _ChatListViewItem({
-//     super.key,
-//     required this.chat,
-//   });
+  final Chat chat;
+  static const double itemHeight = 80;
 
-//   final Chat chat;
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Card(
-//       margin: EdgeInsets.symmetric(vertical: 1),
-//       color: chat.containsUnread ? Colors.yellow.shade100 : null,
-//       elevation: 1,
-//       child: InkWell(
-//         onTap: () {
-//           Navigator.of(context).push(
-//             ChatView.route(
-//               partner: chat.partner,
-//               chat: chat,
-//             ),
-//           );
-//         },
-//         child: Padding(
-//           padding: const EdgeInsets.all(8.0),
-//           child: Row(
-//             children: [
-//               chat.partner.hasAvatar
-//                   ? CircleAvatar(
-//                       foregroundImage:
-//                           NetworkImage(chat.partner.photos.first.url),
-//                       radius: 32,
-//                     )
-//                   : Container(
-//                       width: 64,
-//                       height: 64,
-//                       clipBehavior: Clip.antiAlias,
-//                       decoration: BoxDecoration(
-//                         shape: BoxShape.circle,
-//                         color: context.colorScheme.primaryContainer
-//                             .withOpacity(0.7),
-//                       ),
-//                       child: SvgPicture.asset(
-//                         IconAssets.userPlaceholder,
-//                         colorFilter: ColorFilter.mode(
-//                           context.colorScheme.primary.withOpacity(0.2),
-//                           BlendMode.srcIn,
-//                         ),
-//                         fit: BoxFit.contain,
-//                       ),
-//                     ),
-//               const SizedBox(width: 16),
-//               Expanded(
-//                 child: Column(
-//                   crossAxisAlignment: CrossAxisAlignment.start,
-//                   children: [
-//                     Text(
-//                       chat.partner.name,
-//                       style: context.textTheme.titleLarge,
-//                       overflow: TextOverflow.ellipsis,
-//                     ),
-//                     const SizedBox(height: 12),
-//                     Text(
-//                       chat.messages.last.text,
-//                       maxLines: 1,
-//                       overflow: TextOverflow.ellipsis,
-//                     ),
-//                   ],
-//                 ),
-//               ),
-//               const SizedBox(width: 16),
-//             ],
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-// }
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: chat.containsUnread ? Colors.blue.shade50 : null,
+      shape: const Border(
+        bottom: BorderSide(
+          color: Color.fromRGBO(45, 93, 101, 0.3),
+        ),
+      ),
+      elevation: 1,
+      child: InkWell(
+        onTap: () {
+          Navigator.of(context).push(
+            ChatView.route(
+              context: context,
+              partnerId: chat.partnerId,
+              slide: true,
+            ),
+          );
+        },
+        child: BlocSelector<ProfilesBloc, ProfilesState, Profile?>(
+          selector: (state) => state.getProfile(chat.partnerId),
+          builder: (context, partner) {
+            return Row(
+              children: [
+                ProfilePhoto(
+                  partner?.avatarUrl,
+                  size: const Size.square(itemHeight),
+                ),
+                Expanded(
+                  child: SizedBox(
+                    height: itemHeight,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              partner != null
+                                  ? Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          partner.name,
+                                          style: context.textTheme.titleLarge,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        if (partner.isOnline) ...[
+                                          const SizedBox(width: 8),
+                                          const OnlineLabel(),
+                                        ]
+                                      ],
+                                    )
+                                  : const Text('Loading...'),
+                              Text(
+                                chat.lastMessage.text,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                          Text(chat.lastMessage.createdAt.shortStringDateTime),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}

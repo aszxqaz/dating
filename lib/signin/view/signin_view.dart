@@ -1,5 +1,6 @@
 import 'package:dating/signin/bloc/signin_bloc.dart';
 import 'package:dating/signin/password/password.dart';
+import 'package:dating/signin/phone/view/_auth_screen_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dating/signin/phone/phone.dart';
@@ -21,11 +22,8 @@ class _SignInPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Sign In'),
-      ),
-      body: BlocBuilder<SignInBloc, SignInState>(
+    return AuthScreenWrapper(
+      child: BlocBuilder<SignInBloc, SignInState>(
         builder: (context, state) {
           switch (state.tab) {
             case SignInTabs.phone:

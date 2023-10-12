@@ -1,24 +1,38 @@
-import 'package:collection/collection.dart';
-import 'package:dating/misc/uuid.dart';
+part of 'models.dart';
 
-class ChatNew {
-  const ChatNew({
+class Chat {
+  const Chat({
     required this.partnerId,
     this.messages = const [],
   });
 
   final String partnerId;
-  final List<ChatMessageNew> messages;
+  final List<ChatMessage> messages;
 
-  ChatNew copyWith({
-    List<ChatMessageNew>? messages,
+  // ---
+  // --- GETTERS
+  // ---
+  bool get containsUnread =>
+      messages.any((message) => !message.read && message.senderId == partnerId);
+
+  List<ChatMessage> get unreadIncoming =>
+      messages.where((m) => !m.read && m.incoming).toList();
+
+  ChatMessage get lastMessage => messages.last;
+
+  // ---
+  // --- METHODS
+  // ---
+
+  Chat copyWith({
+    List<ChatMessage>? messages,
   }) =>
-      ChatNew(
+      Chat(
         partnerId: partnerId,
         messages: messages ?? this.messages,
       );
 
-  ChatNew upsert(List<ChatMessageNew> newMessages) {
+  Chat upsert(List<ChatMessage> newMessages) {
     // ignore: no_leading_underscores_for_local_identifiers
     var _messages = messages;
 
@@ -36,12 +50,11 @@ class ChatNew {
     return copyWith(messages: _messages);
   }
 
-  ChatNew withoutMessage(String messageId) => copyWith(
+  Chat withoutMessage(String messageId) => copyWith(
         messages: messages.where((m) => m.id != messageId).toList(),
       );
 
-  ChatNew withReadMessagesStatus(List<String> messageIds, bool read) =>
-      copyWith(
+  Chat withReadMessagesStatus(List<String> messageIds, bool read) => copyWith(
         messages: messages
             .map(
               (message) => messageIds.contains(message.id)
@@ -51,59 +64,6 @@ class ChatNew {
             .toList(),
       );
 
-  bool get containsUnread =>
-      messages.any((message) => !message.read && message.senderId == partnerId);
-
-  List<ChatMessageNew> get unreadIncoming =>
-      messages.where((m) => !m.read && m.incoming).toList();
-
   int indexByMessageId(String messageId) =>
       messages.indexWhere((message) => message.id == messageId);
-}
-
-class ChatMessageNew {
-  ChatMessageNew({
-    String? id,
-    required this.senderId,
-    required this.receiverId,
-    required this.text,
-    required this.read,
-    required this.incoming,
-    this.createdAt,
-  }) : id = id ?? uuid.v4();
-
-  factory ChatMessageNew.fromJson(Map<String, dynamic> json,
-          {required bool incoming}) =>
-      ChatMessageNew(
-        id: json['id'],
-        senderId: json['sender_id'],
-        receiverId: json['receiver_id'],
-        text: json['text'],
-        read: json['read'],
-        createdAt: DateTime.parse(json['created_at']),
-        incoming: incoming,
-      );
-
-  final String id;
-  final String text;
-  final String senderId;
-  final String receiverId;
-  final DateTime? createdAt;
-  final bool read;
-  final bool incoming;
-
-  ChatMessageNew copyWith({
-    String? text,
-    DateTime? createdAt,
-    bool? read,
-  }) =>
-      ChatMessageNew(
-        id: id,
-        senderId: senderId,
-        receiverId: receiverId,
-        incoming: incoming,
-        createdAt: createdAt ?? this.createdAt,
-        text: text ?? this.text,
-        read: read ?? this.read,
-      );
 }

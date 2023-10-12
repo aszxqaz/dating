@@ -4,30 +4,42 @@ class UserState {
   const UserState({
     this.loading = false,
     this.error,
-    this.photos,
-    this.profile,
+    required this.profile,
+    this.curPhotoIndex = 0,
   });
 
-  static const initialLoading = UserState(loading: true);
+  // static const initialLoading = UserState(loading: true);
 
   final bool loading;
   final String? error;
+  final Profile profile;
+  final int curPhotoIndex;
 
-  final List<PhotoTable>? photos;
-  final Profile? profile;
+  List<String>? get links => profile.photos.map((p) => p.url).toList();
+
+  Photo? get currentPhoto =>
+      profile.hasPhotos ? profile.photos[curPhotoIndex] : null;
 
   UserState copyWith({
     bool? loading,
     String? error,
-    List<PhotoTable>? photos,
     Profile? profile,
+    int? curPhotoIndex,
   }) =>
       UserState(
         loading: loading ?? this.loading,
         error: error ?? this.error,
-        photos: photos ?? this.photos,
         profile: profile ?? this.profile,
+        curPhotoIndex: curPhotoIndex ?? this.curPhotoIndex,
       );
 
-  List<String>? get links => photos?.map((p) => p.link).toList();
+  UserState excludePhoto() {
+    // ignore: no_leading_underscores_for_local_identifiers
+    var _photos = profile.photos;
+
+    _photos =
+        _photos.slice(0, curPhotoIndex) + _photos.slice(curPhotoIndex + 1);
+
+    return copyWith(profile: profile.copyWith(photos: _photos));
+  }
 }

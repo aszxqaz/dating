@@ -1,21 +1,14 @@
 part of 'service.dart';
 
 mixin _PreferenceService on _BaseSupabaseService {
-  Future<bool> updatePrefs(Preferences prefs) async {
-    final userId = globalUser?.id;
-    if (userId == null) return false;
-
-    try {
+  Future<bool?> updatePrefs(Preferences prefs) async {
+    return tryExecute('updatePrefs', () async {
       await supabaseClient.from('preferences').upsert({
-        'user_id': userId,
-        'p_user_id': userId,
+        'user_id': requireUserId,
+        'p_user_id': requireUserId,
         ...prefs.toJson()
-      }).eq('user_id', userId);
-    } catch (e) {
-      debugPrint(e.toString());
-      return false;
-    }
-
-    return true;
+      });
+      return true;
+    });
   }
 }

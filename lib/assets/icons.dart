@@ -15,6 +15,7 @@ class IconAssets {
   static const user = '$_baseSrc/user.svg';
   static const userPlaceholder = '$_baseSrc/user_placeholder.svg';
   static const yinyang = '$_baseSrc/yinyang.svg';
+  static const loveLetterBig = '$_baseSrc/custom/love_letter_big.svg';
 }
 
 class ImageAssets {

@@ -57,10 +57,12 @@ class _PasswordSignInInput extends HookWidget {
 
     return Center(
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: MainAxisSize.max,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // PasswordInput(getter: valueGetter),
+          const SizedBox(height: 48),
+          const Spacer(),
           Text(
             'Sign in with password',
             textAlign: TextAlign.center,
@@ -99,7 +101,7 @@ class _PasswordSignInInput extends HookWidget {
               ),
             ),
           ),
-          const SizedBox(height: 36),
+          const Spacer(),
           const Text('Don\'t have an account?'),
           TextButton(
             onPressed: context.read<AppBloc>().goToSignUp,

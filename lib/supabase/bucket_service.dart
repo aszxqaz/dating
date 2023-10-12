@@ -1,14 +1,10 @@
 part of 'service.dart';
 
 mixin _BucketService on _BaseSupabaseService {
-  Future<void> uploadPhoto({
-    required Uint8List bytes,
-  }) async {
-    if (globalUser == null) return;
-    final photoId = _uuid.v4();
-    final path = '${globalUser!.id}/$photoId.jpg';
-
-    try {
+  Future<bool?> uploadPhoto({required Uint8List bytes}) async {
+    return tryExecute('uploadPhoto', () async {
+      final photoId = _uuid.v4();
+      final path = '${globalUser!.id}/$photoId.jpg';
       await supabaseClient.storage.from('photos').uploadBinary(path, bytes);
 
       var link = supabaseClient.storage.from(globalUser!.id).getPublicUrl(path);
@@ -23,15 +19,8 @@ mixin _BucketService on _BaseSupabaseService {
         'p_user_id': globalUser!.id,
         'link': link,
       });
-    } catch (e) {
-      debugPrint(e.toString());
-    }
-  }
 
-  Future<void> createBucket() async {
-    if (globalUser == null) return;
-
-    await supabaseClient.storage
-        .createBucket(globalUser!.id, const BucketOptions(public: true));
+      return true;
+    });
   }
 }

@@ -1,57 +1,61 @@
+part of 'models.dart';
+
 class Photo {
   const Photo({
     required this.id,
-    required this.userId,
     required this.url,
     required this.uploadedAt,
     required this.likes,
   });
 
   final String id;
-  final String userId;
   final String url;
   final DateTime uploadedAt;
-  final Iterable<PhotoLike> likes;
+  final List<String> likes;
 
   factory Photo.fromJson(Map<String, dynamic> json) => Photo(
         id: json['id'],
-        userId: json['user_id'],
         url: json['link'],
-        uploadedAt: DateTime.tryParse(json['created_at']) ?? DateTime.now(),
+        uploadedAt:
+            DateTime.tryParse(json['created_at'])?.toLocal() ?? DateTime.now(),
         likes: json['photo_likes'] != null
             ? (json['photo_likes'] as List)
-                .map((like) => PhotoLike.fromJson(like))
+                .map((like) => like['user_id'] as String)
+                .toList()
             : [],
       );
 
   Map<String, dynamic> toJson() => {
         'id': id,
-        'user_id': userId,
         'link': url,
         'created_at': uploadedAt.toIso8601String(),
-        'photo_likes': likes.map((like) => like.toJson()),
+        'photo_likes': likes,
       };
 
   @override
   toString() => 'Photo (id: *, userId: *, link: $url, likes: $likes.length)';
-}
 
-class PhotoLike {
-  const PhotoLike({
-    required this.photoId,
-    required this.userId,
-  });
+  // ---
+  // --- SPECIFIC
+  // ---
 
-  final String photoId;
-  final String userId;
+  Photo liked(String userId) {
+    final newLikes = likes.upsertWhere(userId, (id) => id == userId, true);
+    return Photo(
+      id: id,
+      uploadedAt: uploadedAt,
+      url: url,
+      likes: newLikes,
+    );
+  }
 
-  factory PhotoLike.fromJson(Map<String, dynamic> json) => PhotoLike(
-        photoId: json['photo_id'],
-        userId: json['user_id'],
-      );
-
-  Map<String, dynamic> toJson() => {
-        'photo_id': photoId,
-        'user_id': userId,
-      };
+  Photo unliked(String userId) {
+    final newLikes = likes.where((id) => id != userId).toList();
+    return Photo(
+      id: id,
+      uploadedAt: uploadedAt,
+      url: url,
+      likes: newLikes,
+    );
+  }
 }

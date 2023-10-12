@@ -88,7 +88,6 @@ class _EmojiTextFieldState extends State<EmojiTextField> {
                 color: Colors.transparent,
                 child: IconButton(
                   onPressed: () {
-                    debugPrint('MESSAGE SEND PRESSED');
                     widget.onMessageSendPressed(controller.text);
                     controller.text = '';
                     focusNode.requestFocus();

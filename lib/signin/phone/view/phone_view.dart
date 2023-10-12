@@ -53,64 +53,63 @@ class _PhoneSignInPhoneInput extends HookWidget {
       return null;
     }, [controller]);
 
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // PhoneInput(getter: valueGetter),
-          Text(
-            'Sign in with SMS-code',
-            textAlign: TextAlign.center,
-            style: context.textTheme.headlineSmall,
-          ),
-          const SizedBox(height: 32),
-          SizedBox(
-            width: 240,
-            child: TextField(
-              controller: controller,
-              onChanged: (value) {
-                context.read<PhoneSignInBloc>().changePhone(value);
-              },
-              keyboardType: TextInputType.phone,
-              textAlign: TextAlign.center,
-              decoration: InputDecoration(
-                hintText: 'Enter your phone number...',
-              ),
-            ),
-          ),
-          const SizedBox(height: 32),
-          ElevatedButton(
-            onPressed: () {
-              context.read<PhoneSignInBloc>().submitInput();
+    return Column(
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        // PhoneInput(getter: valueGetter),
+        const SizedBox(height: 48),
+        const Spacer(),
+        Text(
+          'Sign in with SMS-code',
+          textAlign: TextAlign.center,
+          style: context.textTheme.headlineSmall,
+        ),
+        const SizedBox(height: 48),
+        SizedBox(
+          width: 240,
+          child: TextField(
+            controller: controller,
+            onChanged: (value) {
+              context.read<PhoneSignInBloc>().changePhone(value);
             },
-            child: const Text('Send code'),
-          ),
-          const SizedBox(height: 8),
-          TextButton(
-            onPressed: context.read<SignInBloc>().goToPassword,
-            child: const Text('Sign in with password'),
-          ),
-          const SizedBox(height: 24),
-          SizedBox(
-            height: 24,
-            child: BlocSelector<PhoneSignInBloc, PhoneSignInState, String?>(
-              selector: (PhoneSignInState state) => state.error,
-              builder: (context, error) => Text(
-                error ?? '',
-                style: context.textTheme.bodyMedium!
-                    .copyWith(color: context.colorScheme.error),
-              ),
+            keyboardType: TextInputType.phone,
+            textAlign: TextAlign.center,
+            decoration: const InputDecoration(
+              hintText: 'Enter your phone number...',
             ),
           ),
-          const SizedBox(height: 36),
-          const Text('Don\'t have an account?'),
-          TextButton(
-            onPressed: context.read<AppBloc>().goToSignUp,
-            child: const Text('Sign Up'),
+        ),
+        const SizedBox(height: 32),
+        ElevatedButton(
+          onPressed: () {
+            context.read<PhoneSignInBloc>().submitInput();
+          },
+          child: const Text('Send code'),
+        ),
+        const SizedBox(height: 8),
+        TextButton(
+          onPressed: context.read<SignInBloc>().goToPassword,
+          child: const Text('Sign in with password'),
+        ),
+        const SizedBox(height: 24),
+        SizedBox(
+          height: 24,
+          child: BlocSelector<PhoneSignInBloc, PhoneSignInState, String?>(
+            selector: (PhoneSignInState state) => state.error,
+            builder: (context, error) => Text(
+              error ?? '',
+              style: context.textTheme.bodyMedium!
+                  .copyWith(color: context.colorScheme.error),
+            ),
           ),
-        ],
-      ),
+        ),
+        const Spacer(),
+        const Text('Don\'t have an account?'),
+        TextButton(
+          onPressed: context.read<AppBloc>().goToSignUp,
+          child: const Text('Sign Up'),
+        )
+      ],
     );
   }
 }

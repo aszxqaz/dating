@@ -1,6 +1,6 @@
 {
   "files.exclude": {
-    // ".gitignore": true,
+    ".gitignore": true,
     ".idea": true,
     ".metadata": true,
     "analysis_options.yaml": true,
@@ -12,7 +12,7 @@
     "README.md": true,
     "supabase_auth.iml": true,
     "web": true,
-    // "windows": true,
+    "windows": true,
     "test.json": true,
     "test.js": true,
     ".flutter-plugins": true,

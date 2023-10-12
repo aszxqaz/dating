@@ -1,23 +1,39 @@
 part of 'user_bloc.dart';
 
-sealed class UserEvent {
-  const UserEvent();
+sealed class _UserEvent {
+  const _UserEvent();
 }
 
-final class LoadPhotosUserEvent extends UserEvent {
-  const LoadPhotosUserEvent();
+final class _LoadPhotos extends _UserEvent {
+  const _LoadPhotos();
 }
 
-final class LoadProfilesUserEvent extends UserEvent {
-  const LoadProfilesUserEvent();
+final class _FetchUserProfile extends _UserEvent {
+  const _FetchUserProfile();
 }
 
-final class ChangePrefUserEvent extends UserEvent {
-  const ChangePrefUserEvent({
+final class _ChangePrefs extends _UserEvent {
+  const _ChangePrefs({
     required this.name,
     required this.value,
   });
 
   final String name;
-  final int? value;
+  final int value;
+}
+
+final class _UploadPhoto extends _UserEvent {
+  const _UploadPhoto({required this.bytes});
+
+  final Uint8List bytes;
+}
+
+final class _DeletePhoto extends _UserEvent {
+  const _DeletePhoto();
+}
+
+final class _SetCurPhotoIndex extends _UserEvent {
+  const _SetCurPhotoIndex({required this.index});
+
+  final int index;
 }

@@ -1,5 +1,6 @@
 import 'package:dating/app/app.dart';
 import 'package:dating/misc/extensions.dart';
+import 'package:dating/signin/phone/view/_auth_screen_wrapper.dart';
 import 'package:dating/signup/signup.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -25,9 +26,6 @@ class _SignUpPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Sign Up'),
-      ),
       body: BlocBuilder<SignUpBloc, SignUpState>(
         builder: (context, state) {
           if (state.loading) {
@@ -36,13 +34,12 @@ class _SignUpPage extends StatelessWidget {
             );
           }
 
-          switch (state) {
-            case SignUpInputState _:
-              return _SignUpInput();
+          final screen = switch (state) {
+            SignUpInputState _ => _SignUpInput(),
+            SignUpVerifyState _ => _SignUpVerify()
+          };
 
-            case SignUpVerifyState _:
-              return _SignUpVerify();
-          }
+          return AuthScreenWrapper(child: screen);
         },
       ),
     );
@@ -75,138 +72,118 @@ class _SignUpInput extends HookWidget {
       confirmedController
     ]);
 
-    return LayoutBuilder(builder: (context, constraints) {
-      return SingleChildScrollView(
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: constraints.maxHeight,
-            ),
-            child: IntrinsicHeight(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
+    return Column(
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        const SizedBox(height: 48),
+        const Spacer(),
+        Text(
+          'Sign Up',
+          textAlign: TextAlign.center,
+          style: context.textTheme.headlineSmall,
+        ),
+        const SizedBox(height: 32),
+        BlocBuilder<SignUpBloc, SignUpState>(
+            buildWhen: (p, c) =>
+                (p as SignUpInputState).option !=
+                (c as SignUpInputState).option,
+            builder: (context, state) {
+              return Column(
                 children: [
-                  const SizedBox(height: 48),
-                  Text(
-                    'Sign Up',
-                    textAlign: TextAlign.center,
-                    style: context.textTheme.headlineSmall,
+                  _OptionRadioGroup(
+                    option: (state as SignUpInputState).option,
                   ),
-                  const SizedBox(height: 32),
-                  BlocBuilder<SignUpBloc, SignUpState>(
-                      buildWhen: (p, c) =>
-                          (p as SignUpInputState).option !=
-                          (c as SignUpInputState).option,
-                      builder: (context, state) {
-                        return Column(
-                          children: [
-                            _OptionRadioGroup(
-                              option: (state as SignUpInputState).option,
-                            ),
-                            SizedBox(
-                              width: 240,
-                              child: Column(
-                                children: [
-                                  if (state.option.isPhoneOrBoth)
-                                    TextField(
-                                      controller: phoneController,
-                                      onChanged: context
-                                          .read<SignUpBloc>()
-                                          .changePhone,
-                                      keyboardType: TextInputType.phone,
-                                      decoration: const InputDecoration(
-                                        hintText: 'Phone number',
-                                        labelText: 'Phone number',
-                                      ),
-                                    ),
-                                  if (state.option.isBoth)
-                                    const SizedBox(height: 16),
-                                  if (state.option.isEmailOrBoth)
-                                    TextField(
-                                      controller: emailController,
-                                      onChanged: context
-                                          .read<SignUpBloc>()
-                                          .changeEmail,
-                                      keyboardType: TextInputType.emailAddress,
-                                      decoration: const InputDecoration(
-                                        hintText: 'Email',
-                                        labelText: 'Email',
-                                      ),
-                                    )
-                                ],
-                              ),
-                            )
-                          ],
-                        );
-                      }),
-                  const SizedBox(height: 16),
                   SizedBox(
                     width: 240,
                     child: Column(
                       children: [
-                        DateField(
-                          onChanged: context.read<SignUpBloc>().changeBirthdate,
-                        ),
-                        const SizedBox(height: 16),
-                        TextField(
-                          controller: passwordController,
-                          onChanged: context.read<SignUpBloc>().changePassword,
-                          keyboardType: TextInputType.text,
-                          obscureText: true,
-                          decoration: const InputDecoration(
-                            hintText: 'Password',
-                            labelText: 'Password',
+                        if (state.option.isPhoneOrBoth)
+                          TextField(
+                            controller: phoneController,
+                            onChanged: context.read<SignUpBloc>().changePhone,
+                            keyboardType: TextInputType.phone,
+                            decoration: const InputDecoration(
+                              hintText: 'Phone number',
+                              labelText: 'Phone number',
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        TextField(
-                          controller: confirmedController,
-                          onChanged: context.read<SignUpBloc>().changeConfirmed,
-                          keyboardType: TextInputType.text,
-                          obscureText: true,
-                          decoration: const InputDecoration(
-                            hintText: 'Confirm password',
-                            labelText: 'Confirm password',
-                          ),
-                        ),
+                        if (state.option.isBoth) const SizedBox(height: 16),
+                        if (state.option.isEmailOrBoth)
+                          TextField(
+                            controller: emailController,
+                            onChanged: context.read<SignUpBloc>().changeEmail,
+                            keyboardType: TextInputType.emailAddress,
+                            decoration: const InputDecoration(
+                              hintText: 'Email',
+                              labelText: 'Email',
+                            ),
+                          )
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 32),
-                  ElevatedButton(
-                    onPressed: context.read<SignUpBloc>().submit,
-                    child: const Text('Sign Up'),
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    height: 24,
-                    child: BlocSelector<SignUpBloc, SignUpState, String?>(
-                      selector: (SignUpState state) =>
-                          state is SignUpInputState ? state.error : null,
-                      builder: (context, error) => Text(
-                        error ?? '',
-                        style: context.textTheme.bodyMedium!
-                            .copyWith(color: context.colorScheme.error),
-                        softWrap: true,
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  const Text('Already have an account?'),
-                  TextButton(
-                    onPressed: context.read<AppBloc>().goToSignIn,
-                    child: const Text('Sign In'),
-                  ),
-                  const SizedBox(height: 16),
+                  )
                 ],
+              );
+            }),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: 240,
+          child: Column(
+            children: [
+              DateField(
+                onChanged: context.read<SignUpBloc>().changeBirthdate,
               ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: passwordController,
+                onChanged: context.read<SignUpBloc>().changePassword,
+                keyboardType: TextInputType.text,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  hintText: 'Password',
+                  labelText: 'Password',
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: confirmedController,
+                onChanged: context.read<SignUpBloc>().changeConfirmed,
+                keyboardType: TextInputType.text,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  hintText: 'Confirm password',
+                  labelText: 'Confirm password',
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 32),
+        ElevatedButton(
+          onPressed: context.read<SignUpBloc>().submit,
+          child: const Text('Sign Up'),
+        ),
+        const SizedBox(height: 24),
+        SizedBox(
+          height: 24,
+          child: BlocSelector<SignUpBloc, SignUpState, String?>(
+            selector: (SignUpState state) =>
+                state is SignUpInputState ? state.error : null,
+            builder: (context, error) => Text(
+              error ?? '',
+              style: context.textTheme.bodyMedium!
+                  .copyWith(color: context.colorScheme.error),
+              softWrap: true,
             ),
           ),
         ),
-      );
-    });
+        const Spacer(),
+        const Text('Already have an account?'),
+        TextButton(
+          onPressed: context.read<AppBloc>().goToSignIn,
+          child: const Text('Sign In'),
+        ),
+      ],
+    );
   }
 }
 

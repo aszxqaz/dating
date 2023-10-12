@@ -1,16 +1,16 @@
-import 'package:dating/preferences/preferences.dart';
+part of 'models.dart';
 
-class _PrefsHSMap {
-  static const children = '0';
-  static const lookingFor = '1';
-  static const alcohol = '2';
-  static const education = '3';
-  static const lovelang = '4';
-  static const nutrition = '5';
-  static const pets = '6';
-  static const smoking = '7';
-  static const workout = '8';
-}
+// class _PrefsHSMap {
+//   static const children = '0';
+//   static const lookingFor = '1';
+//   static const alcohol = '2';
+//   static const education = '3';
+//   static const lovelang = '4';
+//   static const nutrition = '5';
+//   static const pets = '6';
+//   static const smoking = '7';
+//   static const workout = '8';
+// }
 
 class Preferences {
   const Preferences({
@@ -26,97 +26,112 @@ class Preferences {
   });
 
   static const empty = Preferences(
-    children: null,
-    lookingFor: null,
-    alcohol: null,
-    education: null,
-    lovelang: null,
-    nutrition: null,
-    pets: null,
-    smoking: null,
-    workout: null,
+    children: PrefsChildren.empty,
+    lookingFor: PrefsLookingFor.empty,
+    alcohol: PrefsAlcohol.empty,
+    education: PrefsEducation.empty,
+    lovelang: PrefsLoveLanguage.empty,
+    nutrition: PrefsNutrition.empty,
+    pets: PrefsPets.empty,
+    smoking: PrefsSmoking.empty,
+    workout: PrefsWorkout.empty,
   );
+
+  bool get isEmpty =>
+      children == PrefsChildren.empty &&
+      lookingFor == PrefsLookingFor.empty &&
+      alcohol == PrefsAlcohol.empty &&
+      education == PrefsEducation.empty &&
+      lovelang == PrefsLoveLanguage.empty &&
+      nutrition == PrefsNutrition.empty &&
+      pets == PrefsPets.empty &&
+      smoking == PrefsSmoking.empty &&
+      workout == PrefsWorkout.empty;
+
+  bool get isNotEmpty => !isEmpty;
 
   factory Preferences.fromJson(Map<String, dynamic> json) => Preferences(
         alcohol: json['alcohol'] != null
             ? PrefsAlcohol.values[json['alcohol']]
-            : null,
+            : PrefsAlcohol.empty,
         children: json['children'] != null
             ? PrefsChildren.values[json['children']]
-            : null,
+            : PrefsChildren.empty,
         lookingFor: json['looking_for'] != null
             ? PrefsLookingFor.values[json['looking_for']]
-            : null,
+            : PrefsLookingFor.empty,
         education: json['education'] != null
             ? PrefsEducation.values[json['education']]
-            : null,
+            : PrefsEducation.empty,
         workout: json['workout'] != null
             ? PrefsWorkout.values[json['workout']]
-            : null,
-        pets: json['pets'] != null ? PrefsPets.values[json['pets']] : null,
+            : PrefsWorkout.empty,
+        pets: json['pets'] != null
+            ? PrefsPets.values[json['pets']]
+            : PrefsPets.empty,
         lovelang: json['love_lang'] != null
             ? PrefsLoveLanguage.values[json['love_lang']]
-            : null,
+            : PrefsLoveLanguage.empty,
         smoking: json['smoking'] != null
             ? PrefsSmoking.values[json['smoking']]
-            : null,
+            : PrefsSmoking.empty,
         nutrition: json['nutrition'] != null
             ? PrefsNutrition.values[json['nutrition']]
-            : null,
+            : PrefsNutrition.empty,
       );
 
-  factory Preferences.fromHydratedJson(Map<String, dynamic> json) =>
-      Preferences(
-        alcohol: json[_PrefsHSMap.alcohol] != null
-            ? PrefsAlcohol.values[json[_PrefsHSMap.alcohol]]
-            : null,
-        children: json[_PrefsHSMap.children] != null
-            ? PrefsChildren.values[json[_PrefsHSMap.children]]
-            : null,
-        lookingFor: json[_PrefsHSMap.lookingFor] != null
-            ? PrefsLookingFor.values[json[_PrefsHSMap.lookingFor]]
-            : null,
-        education: json[_PrefsHSMap.education] != null
-            ? PrefsEducation.values[json[_PrefsHSMap.education]]
-            : null,
-        workout: json[_PrefsHSMap.workout] != null
-            ? PrefsWorkout.values[json[_PrefsHSMap.workout]]
-            : null,
-        pets: json[_PrefsHSMap.pets] != null
-            ? PrefsPets.values[json[_PrefsHSMap.pets]]
-            : null,
-        lovelang: json[_PrefsHSMap.lovelang] != null
-            ? PrefsLoveLanguage.values[json[_PrefsHSMap.lovelang]]
-            : null,
-        smoking: json[_PrefsHSMap.smoking] != null
-            ? PrefsSmoking.values[json[_PrefsHSMap.smoking]]
-            : null,
-        nutrition: json[_PrefsHSMap.nutrition] != null
-            ? PrefsNutrition.values[json[_PrefsHSMap.nutrition]]
-            : null,
-      );
+  // factory Preferences.fromHydratedJson(Map<String, dynamic> json) =>
+  // Preferences(
+  //   alcohol: json[_PrefsHSMap.alcohol] != null
+  //       ? PrefsAlcohol.values[json[_PrefsHSMap.alcohol]]
+  //       : null,
+  //   children: json[_PrefsHSMap.children] != null
+  //       ? PrefsChildren.values[json[_PrefsHSMap.children]]
+  //       : null,
+  //   lookingFor: json[_PrefsHSMap.lookingFor] != null
+  //       ? PrefsLookingFor.values[json[_PrefsHSMap.lookingFor]]
+  //       : null,
+  //   education: json[_PrefsHSMap.education] != null
+  //       ? PrefsEducation.values[json[_PrefsHSMap.education]]
+  //       : null,
+  //   workout: json[_PrefsHSMap.workout] != null
+  //       ? PrefsWorkout.values[json[_PrefsHSMap.workout]]
+  //       : null,
+  //   pets: json[_PrefsHSMap.pets] != null
+  //       ? PrefsPets.values[json[_PrefsHSMap.pets]]
+  //       : null,
+  //   lovelang: json[_PrefsHSMap.lovelang] != null
+  //       ? PrefsLoveLanguage.values[json[_PrefsHSMap.lovelang]]
+  //       : null,
+  //   smoking: json[_PrefsHSMap.smoking] != null
+  //       ? PrefsSmoking.values[json[_PrefsHSMap.smoking]]
+  //       : null,
+  //   nutrition: json[_PrefsHSMap.nutrition] != null
+  //       ? PrefsNutrition.values[json[_PrefsHSMap.nutrition]]
+  //       : null,
+  // );
 
-  Map<String, dynamic> toHydratedJson() => {
-        _PrefsHSMap.alcohol: alcohol?.index,
-        _PrefsHSMap.children: children?.index,
-        _PrefsHSMap.education: education?.index,
-        _PrefsHSMap.lookingFor: lookingFor?.index,
-        _PrefsHSMap.lovelang: lovelang?.index,
-        _PrefsHSMap.nutrition: nutrition?.index,
-        _PrefsHSMap.pets: pets?.index,
-        _PrefsHSMap.smoking: smoking?.index,
-        _PrefsHSMap.workout: workout?.index,
-      };
+  // Map<String, dynamic> toHydratedJson() => {
+  //       _PrefsHSMap.alcohol: alcohol?.index,
+  //       _PrefsHSMap.children: children?.index,
+  //       _PrefsHSMap.education: education?.index,
+  //       _PrefsHSMap.lookingFor: lookingFor?.index,
+  //       _PrefsHSMap.lovelang: lovelang?.index,
+  //       _PrefsHSMap.nutrition: nutrition?.index,
+  //       _PrefsHSMap.pets: pets?.index,
+  //       _PrefsHSMap.smoking: smoking?.index,
+  //       _PrefsHSMap.workout: workout?.index,
+  //     };
 
-  final PrefsChildren? children;
-  final PrefsLookingFor? lookingFor;
-  final PrefsAlcohol? alcohol;
-  final PrefsEducation? education;
-  final PrefsLoveLanguage? lovelang;
-  final PrefsNutrition? nutrition;
-  final PrefsPets? pets;
-  final PrefsSmoking? smoking;
-  final PrefsWorkout? workout;
+  final PrefsChildren children;
+  final PrefsLookingFor lookingFor;
+  final PrefsAlcohol alcohol;
+  final PrefsEducation education;
+  final PrefsLoveLanguage lovelang;
+  final PrefsNutrition nutrition;
+  final PrefsPets pets;
+  final PrefsSmoking smoking;
+  final PrefsWorkout workout;
 
   copyWith({
     PrefsAlcohol? alcohol,
@@ -142,14 +157,14 @@ class Preferences {
       );
 
   Map<String, dynamic> toJson() => {
-        'alcohol': alcohol?.index,
-        'children': children?.index,
-        'education': education?.index,
-        'looking_for': lookingFor?.index,
-        'love_lang': lovelang?.index,
-        'nutrition': nutrition?.index,
-        'pets': pets?.index,
-        'smoking': smoking?.index,
-        'workout': workout?.index,
+        'alcohol': alcohol.index,
+        'children': children.index,
+        'education': education.index,
+        'looking_for': lookingFor.index,
+        'love_lang': lovelang.index,
+        'nutrition': nutrition.index,
+        'pets': pets.index,
+        'smoking': smoking.index,
+        'workout': workout.index,
       };
 }

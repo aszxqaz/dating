@@ -5,6 +5,7 @@ enum HomeTabs {
   notifications,
   slides,
   messages,
+  search,
   user;
 
   static HomeTabs initial = HomeTabs.slides;
@@ -44,6 +45,8 @@ extension HomeTabsDisplay on HomeTabs {
         return 'Messages';
       case HomeTabs.user:
         return 'My Profile';
+      case HomeTabs.search:
+        return 'Search';
     }
   }
 }

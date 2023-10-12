@@ -45,7 +45,7 @@ class PhoneInputController {
       final newCodes = getCodes(newValue);
 
       if (newCodes.length == 1) {
-        final code = newCodes.first['dial_code']!;
+        final code = newCodes.first.dialCode;
         final newState = PhoneInputControllerState(
           text: code,
           code: code,
@@ -81,9 +81,9 @@ class PhoneInputController {
     return newState;
   }
 
-  List<Map<String, String>> getCodes(String input) {
-    return countriesInfo
-        .where((info) => info['dial_code']!.startsWith(input))
+  Iterable<CountryInfo> getCodes(String input) {
+    return countriesList
+        .where((info) => info.dialCode.startsWith(input))
         .toList();
   }
 
@@ -116,7 +116,7 @@ final class PhoneInputControllerState {
   });
 
   final String? error;
-  final List<Map<String, String>>? codes;
+  final Iterable<CountryInfo>? codes;
   final String? code;
   final String text;
 }

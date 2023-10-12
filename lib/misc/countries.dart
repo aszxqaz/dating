@@ -1,4 +1,6 @@
-final countriesInfo = [
+import 'package:flutter/material.dart';
+
+const _countriesInfoJson = [
   {"name": "Afghanistan", "dial_code": "+93", "code": "AF"},
   {"name": "Aland Islands", "dial_code": "+358", "code": "AX"},
   {"name": "Albania", "dial_code": "+355", "code": "AL"},
@@ -240,3 +242,25 @@ final countriesInfo = [
   {"name": "Zambia", "dial_code": "+260", "code": "ZM"},
   {"name": "Zimbabwe", "dial_code": "+263", "code": "ZW"}
 ];
+
+@immutable
+class CountryInfo {
+  const CountryInfo({
+    required this.name,
+    required this.dialCode,
+    required this.code,
+  });
+
+  final String name;
+  final String dialCode;
+  final String code;
+
+  factory CountryInfo.fromJson(Map<String, String> json) => CountryInfo(
+        name: json['name']!,
+        dialCode: json['dial_code']!,
+        code: json['code']!,
+      );
+}
+
+final countriesList =
+    _countriesInfoJson.map((json) => CountryInfo.fromJson(json));

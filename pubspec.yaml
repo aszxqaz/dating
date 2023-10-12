@@ -22,12 +22,12 @@ dependencies:
   collection: ^1.17.2
   flutter_layout_grid: ^2.0.5
   path_provider: ^2.1.1
-  cached_network_image: ^3.2.3
+  cached_network_image: ^3.3.0
   image_picker: ^1.0.4
   uuid: ^4.0.0
   flutter_image_compress: ^2.0.4
   timeago: ^3.5.0
-  location: 4.4.0
+  location: ^5.0.3
   hydrated_bloc: ^9.1.2
   carousel_slider: ^4.2.1
   photo_view: ^0.14.0
@@ -37,6 +37,9 @@ dependencies:
   ionicons: ^0.2.2
   extended_text_field: ^12.1.0
   emoji_picker_flutter: ^1.6.1
+  animations: ^2.0.8
+  flutter_sim_country_code: ^0.1.2
+  devicelocale: ^0.7.0
 dev_dependencies:
   shared_preferences: ^2.2.1
   flutter_test:
@@ -55,6 +58,7 @@ flutter:
     - assets/marmot.jpg
     - assets/images/
     - assets/emoji/noto/
+    - assets/gifs/
   fonts:
     - family: 'Montserrat'
       fonts:

@@ -1,3 +1,5 @@
+part of 'models.dart';
+
 class UserLocation {
   const UserLocation({
     required this.latitude,

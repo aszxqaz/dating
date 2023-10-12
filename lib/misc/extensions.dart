@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -43,11 +44,55 @@ extension PrettyJsonString on Object {
   }
 }
 
-extension ToLocalTime on DateTime {
-  String get localTime {
-    final local = toLocal();
-    final hour = local.hour.toString().padLeft(2, '0');
-    final minute = local.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
+extension ListExt<T> on List<T> {
+  List<T> updated(int index, T item, [bool panic = false]) {
+    if (index < 0 || index >= length && !panic) {
+      debugPrint('ERROR: List.updated() error: not found at index $index.');
+      return this;
+    }
+
+    return slice(0, index) + [item] + slice(index + 1);
+  }
+
+  List<T> replaceWhere(
+    T item,
+    bool Function(T item) predicate, [
+    bool panic = false,
+  ]) {
+    final index = indexWhere(predicate);
+    if (index == -1 && !panic) {
+      debugPrint('ERROR: List.updatedWhere() error: not found.');
+      return this;
+    }
+
+    return updated(index, item, panic);
+  }
+
+  List<T> updateWhere(
+    T Function(T item) updateFn,
+    bool Function(T item) predicate, [
+    bool panic = false,
+  ]) {
+    final index = indexWhere(predicate);
+    if (index == -1 && !panic) {
+      debugPrint('ERROR: List.updatedWhere() error: not found.');
+      return this;
+    }
+
+    return updated(index, updateFn(this[index]), panic);
+  }
+
+  List<T> upsertWhere(
+    T item,
+    bool Function(T item) predicate, [
+    bool atStart = false,
+  ]) {
+    final index = indexWhere(predicate);
+
+    if (index != -1) {
+      return updated(index, item);
+    } else {
+      return atStart ? [item, ...this] : [...this, item];
+    }
   }
 }

@@ -1,9 +1,9 @@
 import 'dart:async';
 
+import 'package:dating/misc/countries.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:dating/misc/controller.dart';
-import 'package:dating/misc/countries.dart';
 
 class PhoneInput extends StatefulWidget {
   const PhoneInput({super.key, required this.getter});
@@ -15,7 +15,7 @@ class PhoneInput extends StatefulWidget {
 }
 
 class _PhoneInputState extends State<PhoneInput> {
-  String code = countriesInfo.first['dial_code']!;
+  String code = countriesList.first.dialCode;
 
   final values = StreamController<String>.broadcast();
   late PhoneInputController phoneController;
@@ -97,8 +97,7 @@ class _PhoneInputState extends State<PhoneInput> {
                             children: state.codes!.map((info) {
                               return TextButton.icon(
                                 onPressed: () {
-                                  phoneController
-                                      .selectCode(info['dial_code']!);
+                                  phoneController.selectCode(info.dialCode);
 
                                   textController.selection =
                                       TextSelection.collapsed(
@@ -111,11 +110,11 @@ class _PhoneInputState extends State<PhoneInput> {
                                   width: 24,
                                   height: 16,
                                   child: SvgPicture.asset(
-                                    'assets/flags2/${info['code']}.svg',
+                                    'assets/flags2/${info.code}.svg',
                                   ),
                                 ),
                                 label: Text(
-                                  '${info['name']} (${info['dial_code']})',
+                                  '${info.name} (${info.dialCode})',
                                 ),
                               );
                             }).toList(),

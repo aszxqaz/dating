@@ -17,5 +17,16 @@ final class AppUnauthenticatedState extends AppState {
 }
 
 final class AppAuthenticatedState extends AppState {
-  const AppAuthenticatedState();
+  const AppAuthenticatedState({required this.profile});
+
+  final Profile profile;
+}
+
+final class AppLoadingState extends AppState {
+  const AppLoadingState();
+}
+
+final class AppIncompleteState extends AppState {
+  const AppIncompleteState({this.countryCode});
+  final String? countryCode;
 }
