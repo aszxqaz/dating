@@ -4,7 +4,7 @@
     ".idea": true,
     ".metadata": true,
     "analysis_options.yaml": true,
-    "android": true,
+    "android": false,
     "ios": true,
     "linux": true,
     "macos": true,

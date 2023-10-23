@@ -4,22 +4,34 @@ import 'package:flutter/material.dart';
 import 'package:ionicons/ionicons.dart';
 
 class NameAgeInfo extends StatelessWidget {
-  const NameAgeInfo({
-    super.key,
-    required this.name,
-    required this.birthdate,
-  });
+  const NameAgeInfo(this.profile, {super.key});
 
-  final String name;
-  final DateTime birthdate;
+  final Profile profile;
 
   @override
   Widget build(BuildContext context) {
+    final birthdate = profile.birthdate;
+    final gender = profile.gender;
+    final name = profile.name;
+
     final age = DateTime.now().difference(birthdate).inDays ~/ 365;
-    return Text(
-      '$name, $age',
-      style: context.textTheme.titleLarge!.copyWith(
-        fontSize: 28,
+    return Text.rich(
+      TextSpan(
+        style: context.textTheme.titleLarge!.copyWith(
+          fontSize: 28,
+        ),
+        children: [
+          TextSpan(text: '$name, $age'),
+          WidgetSpan(
+            alignment: PlaceholderAlignment.middle,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 8.0),
+              child: Icon(
+                gender == Gender.male ? Ionicons.male : Ionicons.female,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

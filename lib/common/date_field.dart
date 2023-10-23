@@ -1,19 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class DateField extends StatelessWidget {
+class DateField extends StatefulWidget {
   const DateField({
     super.key,
-    required this.controller,
+    this.controller,
     this.style,
     this.hintStyle,
     this.decoration,
+    this.autofocus,
+    this.onChanged,
   });
 
   final TextStyle? style;
   final TextStyle? hintStyle;
-  final DateFieldController controller;
+  final DateFieldController? controller;
   final InputDecoration? decoration;
+  final bool? autofocus;
+  final Function(DateTime?)? onChanged;
+
+  @override
+  State<DateField> createState() => _DateFieldState();
+}
+
+class _DateFieldState extends State<DateField> {
+  late DateFieldController controller;
+  bool selfControlled = false;
+
+  @override
+  void initState() {
+    if (widget.controller == null) {
+      selfControlled = true;
+    }
+    controller = widget.controller ?? DateFieldController();
+
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    if (selfControlled) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +54,7 @@ class DateField extends StatelessWidget {
           child: _TextField(
             controller: controller._day,
             focusNode: controller._dayFocus,
-            autofocus: false,
+            autofocus: widget.autofocus ?? false,
             onChanged: (value) {
               if (value.length == 2) {
                 if (controller._month.text.isEmpty) {
@@ -35,18 +65,19 @@ class DateField extends StatelessWidget {
                   controller._monthFocus.requestFocus();
                 }
               }
+              widget.onChanged?.call(controller.date);
             },
             length: 2,
             min: 1,
             max: 31,
-            style: style,
+            style: widget.style,
             hint: 'DD',
-            decoration: decoration,
-            hintStyle: hintStyle,
+            decoration: widget.decoration,
+            hintStyle: widget.hintStyle,
           ),
         ),
         const SizedBox(width: 3),
-        Text('/', style: style),
+        Text('/', style: widget.style),
         const SizedBox(width: 3),
         Expanded(
           flex: 1,
@@ -58,18 +89,19 @@ class DateField extends StatelessWidget {
               if (value.length == 2 && controller._year.text.isEmpty) {
                 controller._yearFocus.requestFocus();
               }
+              widget.onChanged?.call(controller.date);
             },
             length: 2,
             min: 1,
             max: 12,
-            style: style,
+            style: widget.style,
             hint: 'MM',
-            decoration: decoration,
-            hintStyle: hintStyle,
+            decoration: widget.decoration,
+            hintStyle: widget.hintStyle,
           ),
         ),
         const SizedBox(width: 3),
-        Text('/', style: style),
+        Text('/', style: widget.style),
         const SizedBox(width: 3),
         Expanded(
           flex: 2,
@@ -77,14 +109,16 @@ class DateField extends StatelessWidget {
             controller: controller._year,
             focusNode: controller._yearFocus,
             autofocus: false,
-            onChanged: (value) {},
-            length: 2,
+            onChanged: (value) {
+              widget.onChanged?.call(controller.date);
+            },
+            length: 4,
             min: 1901,
             max: DateTime.now().year,
-            style: style,
+            style: widget.style,
             hint: 'YYYY',
-            decoration: decoration,
-            hintStyle: hintStyle,
+            decoration: widget.decoration,
+            hintStyle: widget.hintStyle,
           ),
         ),
       ],
@@ -109,7 +143,9 @@ class DateFieldController {
   final FocusNode _monthFocus;
   final FocusNode _yearFocus;
 
-  DateTime? get date => _getDate();
+  DateTime? get date {
+    return _getDate();
+  }
 
   dispose() {
     _day.dispose();
@@ -120,7 +156,9 @@ class DateFieldController {
     _yearFocus.dispose();
   }
 
-  _getDate() => DateTime.tryParse('${_year.text}-${_month.text}-${_day.text}');
+  String get _dateString => '${_year.text}-${_month.text}-${_day.text}';
+
+  DateTime? _getDate() => DateTime.tryParse(_dateString);
 }
 
 class _Formatter extends TextInputFormatter {
@@ -137,14 +175,22 @@ class _Formatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
       TextEditingValue oldValue, TextEditingValue newValue) {
-    if (newValue.text == '') return newValue;
+    if (newValue.text == '' || (newValue.text == '0' && length <= 2)) {
+      return newValue;
+    }
+
+    if (newValue.text[0] == '0' && length > 2) {
+      return oldValue;
+    }
 
     final value = int.tryParse(newValue.text);
 
     if (value == null) return oldValue;
 
+    final input =
+        newValue.text[0] == '0' ? newValue.text.substring(1) : newValue.text;
+
     for (int i = min; i <= max; i++) {
-      final input = newValue.text;
       final possible = i.toString();
 
       if (input.length > possible.length) {
@@ -208,7 +254,10 @@ class _TextField extends StatelessWidget {
         ),
       ),
       maxLines: 1,
-      inputFormatters: [_Formatter(length: length, min: min, max: max)],
+      inputFormatters: [
+        _Formatter(length: length, min: min, max: max),
+        LengthLimitingTextInputFormatter(length),
+      ],
     );
   }
 }

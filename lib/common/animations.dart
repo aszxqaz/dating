@@ -34,6 +34,39 @@ class SharedAxisSwitcher extends StatelessWidget {
   }
 }
 
+class SharedAxisSwitcherBuilder extends StatelessWidget {
+  const SharedAxisSwitcherBuilder({
+    super.key,
+    required this.builder,
+    required this.type,
+    this.reverse = false,
+  });
+
+  final SharedAxisTransitionType type;
+  final bool reverse;
+  final Widget Function(BuildContext context) builder;
+
+  @override
+  Widget build(BuildContext context) {
+    return PageTransitionSwitcher(
+      reverse: reverse,
+      transitionBuilder: (
+        Widget child,
+        Animation<double> animation,
+        Animation<double> secondaryAnimation,
+      ) {
+        return SharedAxisTransition(
+          animation: animation,
+          secondaryAnimation: secondaryAnimation,
+          transitionType: type,
+          child: child,
+        );
+      },
+      child: builder(context),
+    );
+  }
+}
+
 class FadeThroughSwitcher extends StatelessWidget {
   const FadeThroughSwitcher({
     super.key,
@@ -60,6 +93,36 @@ class FadeThroughSwitcher extends StatelessWidget {
         );
       },
       child: child,
+    );
+  }
+}
+
+class FadeThroughSwitcherBuilder extends StatelessWidget {
+  const FadeThroughSwitcherBuilder({
+    super.key,
+    required this.builder,
+    this.fillColor,
+  });
+
+  final Widget Function(BuildContext context) builder;
+  final Color? fillColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return PageTransitionSwitcher(
+      transitionBuilder: (
+        Widget child,
+        Animation<double> animation,
+        Animation<double> secondaryAnimation,
+      ) {
+        return FadeThroughTransition(
+          animation: animation,
+          secondaryAnimation: secondaryAnimation,
+          fillColor: fillColor,
+          child: child,
+        );
+      },
+      child: builder(context),
     );
   }
 }

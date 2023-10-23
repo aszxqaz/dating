@@ -143,7 +143,7 @@ class ShadowedIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.black.withAlpha(150),
+      color: Colors.black.withAlpha(180),
       shape: const CircleBorder(side: BorderSide.none),
       child: InkWell(
         onTap: onPressed,

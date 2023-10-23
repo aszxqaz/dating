@@ -9,11 +9,13 @@ import 'package:dating/common/profile_photo.dart';
 import 'package:dating/supabase/service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:ionicons/ionicons.dart';
 
-class ChatsList extends HookWidget {
-  const ChatsList({
+part '_item.dart';
+
+class ChatsListScreen extends StatelessWidget {
+  const ChatsListScreen({
     super.key,
   });
 
@@ -56,93 +58,6 @@ class ChatsList extends HookWidget {
                 ),
               );
       },
-    );
-  }
-}
-
-class _ChatListViewItem extends StatelessWidget {
-  const _ChatListViewItem({
-    required this.chat,
-  });
-
-  final Chat chat;
-  static const double itemHeight = 80;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: chat.containsUnread ? Colors.blue.shade50 : null,
-      shape: const Border(
-        bottom: BorderSide(
-          color: Color.fromRGBO(45, 93, 101, 0.3),
-        ),
-      ),
-      elevation: 1,
-      child: InkWell(
-        onTap: () {
-          Navigator.of(context).push(
-            ChatView.route(
-              context: context,
-              partnerId: chat.partnerId,
-              slide: true,
-            ),
-          );
-        },
-        child: BlocSelector<ProfilesBloc, ProfilesState, Profile?>(
-          selector: (state) => state.getProfile(chat.partnerId),
-          builder: (context, partner) {
-            return Row(
-              children: [
-                ProfilePhoto(
-                  partner?.avatarUrl,
-                  size: const Size.square(itemHeight),
-                ),
-                Expanded(
-                  child: SizedBox(
-                    height: itemHeight,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              partner != null
-                                  ? Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          partner.name,
-                                          style: context.textTheme.titleLarge,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        if (partner.isOnline) ...[
-                                          const SizedBox(width: 8),
-                                          const OnlineLabel(),
-                                        ]
-                                      ],
-                                    )
-                                  : const Text('Loading...'),
-                              Text(
-                                chat.lastMessage.text,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                          Text(chat.lastMessage.createdAt.shortStringDateTime),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-      ),
     );
   }
 }

@@ -1,8 +1,8 @@
-import 'package:animations/animations.dart';
 import 'package:dating/app/app.dart';
 import 'package:dating/chatslist/chatslist_view.dart';
-import 'package:dating/common/switcher.dart';
+import 'package:dating/common/animations.dart';
 import 'package:dating/features/features.dart';
+import 'package:dating/feed/feed_screen.dart';
 import 'package:dating/home/bloc/home_bloc.dart';
 import 'package:dating/hot_cards/hot_cards.dart';
 import 'package:dating/hot_swipe/view/hot_swipe_view.dart';
@@ -11,7 +11,6 @@ import 'package:dating/notifications/notifications_screen.dart';
 import 'package:dating/user/user_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:ionicons/ionicons.dart';
 
@@ -29,81 +28,70 @@ class HomePage extends StatelessWidget {
   }
 }
 
-class _HomePage extends HookWidget {
+class _HomePage extends StatelessWidget {
+  AppBar? _buildAppBar(HomeTab tab, BuildContext context) {
+    return !_appBarExcluded.contains(tab)
+        ? AppBar(
+            title: Text(tab.text),
+            actions: [
+              IconButton(
+                onPressed: () {},
+                icon: const Icon(Ionicons.settings_outline),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                onPressed: context.read<AppBloc>().signOut,
+                icon: const Icon(Ionicons.exit_outline),
+              ),
+            ],
+          )
+        : null;
+  }
+
   @override
   Widget build(BuildContext context) {
-    useEffect(() {
-      context.read<HomeBloc>().requestLocationSubscription();
-
-      return null;
-    }, []);
-
-    return BlocBuilder<HomeBloc, HomeState>(
-      // buildWhen: (p, c) => p.tab != c.tab,
-      builder: (context, state) {
+    return BlocSelector<HomeBloc, HomeState, HomeTab>(
+      selector: (state) => state.tab,
+      builder: (context, tab) {
         return Scaffold(
-          appBar: appBars.contains(state.tab)
-              ? AppBar(
-                  title: Text(state.tab.text),
-                  actions: [
-                    IconButton(
-                      onPressed: () {},
-                      icon: const Icon(Ionicons.settings_outline),
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      onPressed: context.read<AppBloc>().signOut,
-                      icon: const Icon(Ionicons.exit_outline),
-                    ),
-                  ],
-                )
-              : null,
+          appBar: _buildAppBar(tab, context),
           bottomNavigationBar: const _HomeBottomNavigationBar(),
-          body: PageTransitionSwitcher(
-            transitionBuilder: (
-              Widget child,
-              Animation<double> animation,
-              Animation<double> secondaryAnimation,
-            ) {
-              return FadeThroughTransition(
-                animation: animation,
-                secondaryAnimation: secondaryAnimation,
-                child: child,
-              );
-            },
-            child: pagesMap[state.tab],
-          ),
+          body: _HomeBody(tab: tab),
         );
       },
     );
   }
 }
 
-const pagesMap = {
-  HomeTabs.feed: Text('Feed'),
-  HomeTabs.notifications: NotificationsScreen(),
-  HomeTabs.search: HotCardsScreen(),
-  HomeTabs.slides: HotSwipeScreen(),
-  HomeTabs.messages: ChatsList(),
-  HomeTabs.user: UserScreen(),
-};
+class _HomeBody extends StatelessWidget {
+  const _HomeBody({required this.tab});
 
-const appBars = [
-  HomeTabs.user,
-  HomeTabs.messages,
-  HomeTabs.notifications,
-];
-
-class _SlidesPage extends StatelessWidget {
-  const _SlidesPage();
+  final HomeTab tab;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: IconSwitcher(
-        notifier: IconSwitcherChangeNotifier(),
-      ),
+    return FadeThroughSwitcherBuilder(
+      builder: (context) {
+        switch (tab) {
+          case HomeTab.feed:
+            return const FeedScreen();
+          case HomeTab.notifications:
+            return const NotificationsScreen();
+          case HomeTab.search:
+            return const HotCardsScreen();
+          case HomeTab.slides:
+            return const HotSwipeScreen();
+          case HomeTab.messages:
+            return const ChatsListScreen();
+          case HomeTab.user:
+            return const UserScreen();
+        }
+      },
     );
   }
 }
+
+const _appBarExcluded = [
+  HomeTab.slides,
+  HomeTab.search,
+];

@@ -32,8 +32,8 @@ final class _DeletePhoto extends _UserEvent {
   const _DeletePhoto();
 }
 
-final class _SetCurPhotoIndex extends _UserEvent {
-  const _SetCurPhotoIndex({required this.index});
+final class _QuoteUpdated extends _UserEvent {
+  const _QuoteUpdated({required this.quote});
 
-  final int index;
+  final String quote;
 }

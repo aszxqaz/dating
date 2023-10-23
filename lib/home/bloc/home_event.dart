@@ -7,7 +7,7 @@ sealed class _HomeEvent {
 
 final class _HomeTabChanged extends _HomeEvent {
   const _HomeTabChanged({required this.tab});
-  final HomeTabs tab;
+  final HomeTab tab;
 }
 
 final class _LocationRequested extends _HomeEvent {
@@ -26,8 +26,4 @@ final class _LocationSubscriptionRequested extends _HomeEvent {
 
 final class _LastSeenSubscriptionRequested extends _HomeEvent {
   const _LastSeenSubscriptionRequested();
-}
-
-final class _LocationSubscriptionEnded extends _HomeEvent {
-  const _LocationSubscriptionEnded();
 }

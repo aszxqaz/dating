@@ -12,6 +12,10 @@ final class _SubscriptionRequested extends _NotificationsEvent {
   const _SubscriptionRequested();
 }
 
+// final class _Unsubscribed extends _NotificationsEvent {
+//   const _Unsubscribed();
+// }
+
 final class _LikesReceived extends _NotificationsEvent {
   const _LikesReceived({required this.likes});
 

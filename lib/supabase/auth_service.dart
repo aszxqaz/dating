@@ -1,9 +1,4 @@
-import 'dart:async';
-
-import 'package:dating/supabase/client.dart';
-import 'package:dating/supabase/user.dart';
-import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+part of 'service.dart';
 
 class AuthenticationError {
   const AuthenticationError(this.message);
@@ -24,73 +19,42 @@ final class UnknownAuthenticationError extends AuthenticationError {
   const UnknownAuthenticationError() : super('Unknown error occured');
 }
 
-class AuthService {
-  const AuthService();
-  // : supabaseClient = supabaseClient;
+@immutable
+final class AuthResponse {
+  const AuthResponse({this.error, required this.ok});
 
-  // final SupabaseClient supabaseClient;
+  final String? error;
+  final bool? ok;
+}
 
-  // Stream<AppUser?> get user {
-  //   return supabaseClient.auth.onAuthStateChange.map((auth) {
-  //     final user = auth.toUser();
-  //     return user;
-  //   });
-  // }
-
-  @visibleForTesting
-  static const userCacheKey = '__user_cache_key__';
-
+mixin _AuthService on _BaseSupabaseService {
   void signOut() {
     supabaseClient.auth.signOut();
   }
 
-  Future<void> signUp({
-    String? phone,
-    String? email,
+  Future<AuthResponse?> signUp({
+    required String phone,
     required String password,
-    required String birthdate,
   }) async {
-    try {
+    return tryExecute('signUp', () async {
       final response = await supabaseClient.auth.signUp(
         phone: phone,
-        email: email,
         password: password,
       );
 
       if (response.user?.identities?.isEmpty == true) {
-        throw const OccupiedAuthenticationError();
+        return const AuthResponse(ok: false, error: 'Some error occured');
       }
 
-      // final session = response.session as Session;
-      // final user = response.user as User;
-
-      // final profile = await supabaseClient
-      //     .from('profiles')
-      //     .select()
-      //     .eq('user_id', user.id)
-      //     .maybeSingle();
-
-      // if (profile == null) {
-      //   await supabaseClient.from('profiles').insert({
-      //     'user_id': user.id,
-      //     'birthdate': birthdate,
-      //   });
-      //   debugPrint('SIGN UP: NEW PROFILE REGISTERED');
-      // }
-    } on AuthException catch (err) {
-      throw AuthenticationError(err.message);
-    } on AuthenticationError catch (_) {
-      rethrow;
-    } catch (err) {
-      rethrow;
-    }
+      return const AuthResponse(ok: true);
+    }, false);
   }
 
-  Future<void> verifyCode({
+  Future<bool?> verifyCode({
     required String phone,
     required String code,
   }) async {
-    try {
+    return tryExecute('verifyCode', () async {
       final response = await supabaseClient.auth.verifyOTP(
         type: OtpType.sms,
         phone: phone,
@@ -98,61 +62,131 @@ class AuthService {
       );
 
       if (response.user == null) {
-        throw Exception('User not found');
+        return null;
       }
 
-      final user = await supabaseClient
-          .from('profiles')
-          .select<Map<String, dynamic>?>('id')
-          .eq('id', response.user!.id)
-          .maybeSingle();
+      // Profile? profile = await supabaseService.fetchProfile(response.user!.id);
 
-      if (user == null) {
-        await supabaseClient.from('profiles').insert({'id': response.user!.id});
-      }
-    } catch (err) {
-      debugPrint(err.toString());
-    }
+      // profile ??= await supabaseClient
+      //     .from('profiles')
+      //     .insert({'id': response.user!.id}).select<Map<();
+
+      return true;
+    }, false);
   }
 
-  Future<void> signInWithPhone({required String phone}) async {
-    try {
+  Future<bool?> requestOtp({required String phone}) async {
+    return tryExecute('requestOtp', () async {
       await supabaseClient.auth.signInWithOtp(
         phone: phone,
+        shouldCreateUser: false,
       );
-    } catch (err) {
-      debugPrint(err.toString());
-      rethrow;
-    }
+      return true;
+    }, false);
   }
 
-  Future<AuthenticationError?> signInWithPassword({
-    required String phoneOrEmail,
+  Future<bool?> signInWithPassword({
+    required String phone,
     required String password,
     bool isEmail = false,
   }) async {
-    try {
-      final response = await supabaseClient.auth.signInWithPassword(
-        email: isEmail ? phoneOrEmail : null,
-        phone: isEmail ? null : phoneOrEmail,
+    return tryExecute('signInWithPassword', () async {
+      await supabaseClient.auth.signInWithPassword(
+        phone: phone,
         password: password,
       );
 
-      final data = await supabaseClient
-          .from('profiles')
-          .select<Map<String, dynamic>?>()
-          .eq('user_id', response.user!.id)
-          .maybeSingle();
+      return true;
+    }, false);
 
-      debugPrint(data.toString());
-      debugPrint(response.user!.id);
-      return null;
-    } on AuthException catch (_) {
-      return const BadCredentialsAuthenticationError();
-    } catch (e) {
-      debugPrint(e.toString());
-      return const UnknownAuthenticationError();
-    }
+    // } on AuthException catch (_) {
+  }
+
+  Future<bool?> signInWithFacebook() async {
+    return tryExecute('signInWithFacebook', () async {
+      return await supabaseClient.auth.signInWithOAuth(
+        Provider.facebook,
+        // authScreenLaunchMode: LaunchMode.inAppWebView,
+        redirectTo: 'io.supabase.flutterdemo://login-callback',
+        // context: context,
+      );
+    }, false);
+  }
+
+  Future<void> signInWithGoogle2(BuildContext context) async {
+    await supabaseClient.auth.signInWithOAuth(
+      Provider.google,
+      authScreenLaunchMode: LaunchMode.inAppWebView,
+      redirectTo: 'io.supabase.flutterdemo://login-callback',
+      context: context,
+    );
+  }
+
+  Future<bool?> signInWithGoogle() async {
+    return tryExecute('signInWithGoogle', () async {
+      const appAuth = FlutterAppAuth();
+
+      final random = Random.secure();
+      final rawNonce =
+          base64Url.encode(List<int>.generate(16, (_) => random.nextInt(256)));
+      final hashedNonce = sha256.convert(utf8.encode(rawNonce)).toString();
+
+      final clientId = dotenv.env['GOOGLE_CLIENT_ID']!;
+
+      final redirectUrl = '${clientId.split('.').reversed.join('.')}:/';
+
+      const discoveryUrl =
+          'https://accounts.google.com/.well-known/openid-configuration';
+
+      // authorize the user by opening the concent page
+      final result = await appAuth.authorize(
+        AuthorizationRequest(
+          clientId,
+          redirectUrl,
+          discoveryUrl: discoveryUrl,
+          nonce: hashedNonce,
+          scopes: [
+            'openid',
+            'email',
+          ],
+        ),
+      );
+
+      if (result == null) {
+        throw 'No result';
+      }
+
+      // Request the access and id token to google
+      final tokenResult = await appAuth.token(
+        TokenRequest(
+          clientId,
+          redirectUrl,
+          authorizationCode: result.authorizationCode,
+          discoveryUrl: discoveryUrl,
+          codeVerifier: result.codeVerifier,
+          nonce: result.nonce,
+          scopes: [
+            'openid',
+            'email',
+          ],
+        ),
+      );
+
+      final idToken = tokenResult?.idToken;
+
+      if (idToken == null) {
+        throw 'No idToken';
+      }
+
+      final authResponse = await supabaseClient.auth.signInWithIdToken(
+        provider: Provider.google,
+        idToken: idToken,
+        nonce: rawNonce,
+        accessToken: tokenResult?.accessToken,
+      );
+
+      return authResponse.user != null;
+    }, false);
   }
 }
 
@@ -162,5 +196,3 @@ extension ToUser on AuthState {
     return AppUser(id: session!.user.id);
   }
 }
-
-const authService = AuthService();

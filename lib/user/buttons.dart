@@ -21,26 +21,10 @@ class UploadPhotoButton extends StatelessWidget {
   }
 
   Future<void> uploadPhoto(BuildContext context) async {
-    final picker = ImagePicker();
-    final photo = await picker.pickImage(source: ImageSource.gallery);
+    final bytes = await pickPhoto();
 
-    if (photo != null && photo.path.endsWith('.jpg') && context.mounted) {
-      try {
-        final bytes = defaultTargetPlatform != TargetPlatform.windows
-            ? await FlutterImageCompress.compressWithFile(
-                minWidth: 800,
-                minHeight: 1200,
-                photo.path,
-                quality: 50,
-              )
-            : await photo.readAsBytes();
-
-        if (bytes != null && context.mounted) {
-          context.read<UserBloc>().uploadPhoto(bytes);
-        }
-      } catch (e) {
-        debugPrint(e.toString());
-      }
+    if (bytes != null && context.mounted) {
+      context.read<UserBloc>().uploadPhoto(bytes);
     }
   }
 }

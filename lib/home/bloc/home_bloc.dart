@@ -21,19 +21,9 @@ class HomeBloc extends Bloc<_HomeEvent, HomeState> {
 
   static HomeBloc of(BuildContext context) => context.read<HomeBloc>();
 
-  late StreamSubscription<LocationData> _locationSubscription;
-  late StreamSubscription _lastSeenUpdateSubscription;
-
-  // ---
-  // --- LIFECYCLE
-  // ---
-
-  @override
-  Future<void> close() {
-    _locationSubscription.cancel();
-    _lastSeenUpdateSubscription.cancel();
-    return super.close();
-  }
+  StreamSubscription? _locationSubscription;
+  StreamSubscription? _lastSeenUpdateSubscription;
+  static const updateLastSeenDuration = Duration(minutes: 1);
 
   // ---
   // --- EVENT HANDLERS
@@ -59,6 +49,8 @@ class HomeBloc extends Bloc<_HomeEvent, HomeState> {
         emit(state.copyWith(location: location));
       }
     }
+
+    _startLocationSubscription();
   }
 
   Future<void> _onLastSeenSubscriptionRequested(
@@ -66,11 +58,11 @@ class HomeBloc extends Bloc<_HomeEvent, HomeState> {
     Emitter emit,
   ) async {
     await supabaseService.updateLastSeen();
-    debugPrint('Updated last seen');
+    debugPrint('[HomeBloc] updated last seen');
 
     _lastSeenUpdateSubscription =
-        Stream.periodic(const Duration(minutes: 1)).listen((_) async {
-      debugPrint('Updating last seen');
+        Stream.periodic(updateLastSeenDuration).listen((_) async {
+      debugPrint('[HomeBloc] updated last seen');
       await supabaseService.updateLastSeen();
     });
   }
@@ -131,24 +123,29 @@ class HomeBloc extends Bloc<_HomeEvent, HomeState> {
   // --- PUBLIC API
   // ---
 
-  void setTab(HomeTabs tab) {
+  void setTab(HomeTab tab) {
     add(_HomeTabChanged(tab: tab));
   }
 
-  void requestLocationSubscription() {
+  void subscribe() {
     add(const _LocationSubscriptionRequested());
-  }
-
-  void requestLastSeenSubscription() {
     add(const _LastSeenSubscriptionRequested());
-  }
-
-  void endLocationsSubscription() {
-    add(const _LocationSubscriptionEnded());
   }
 
   void setLocation() {
     add(const _LocationRequested());
+  }
+
+  void unsubscribe() {
+    if (_locationSubscription != null) {
+      _locationSubscription!.cancel();
+      debugPrint('[HomeBloc] location subscription cancellation requested');
+    }
+
+    if (_lastSeenUpdateSubscription != null) {
+      _lastSeenUpdateSubscription!.cancel();
+      debugPrint('[HomeBloc] last seen subscription cancellation requested');
+    }
   }
 
   // ---

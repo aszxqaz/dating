@@ -1,114 +1,133 @@
 import 'dart:async';
+import 'dart:io';
 
-import 'package:dating/supabase/auth_service.dart';
 import 'package:dating/supabase/client.dart';
 import 'package:dating/supabase/service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_sim_country_code/flutter_sim_country_code.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'app_event.dart';
 part 'app_state.dart';
 
-class AppBloc extends Bloc<AppEvent, AppState> {
-  AppBloc() : super(AppUnauthenticatedState.initial) {
-    on<AppUnauthenticatedTabChanged>((event, emit) {
-      assert(state is AppUnauthenticatedState);
-      emit(AppUnauthenticatedState(tab: event.tab));
-    });
+class AppBloc extends Bloc<_AppEvent, AppState> {
+  AppBloc() : super(const AppLoadingState()) {
+    on<_Authenticated>(_onAuthenticated);
+    on<_Unauthenticated>(_onUnauthenticated);
+    on<_Incompleted>(_onIncompleted);
 
-    on<AppAuthStateChanged>(_onAppAuthStateChanged);
-    on<AppSubmitIncomplete>(_onAppSubmitIncomplete);
-
-    _subscribeAuthState();
+    _initApp();
   }
+
+  static AppBloc of(BuildContext context) => context.read<AppBloc>();
 
   StreamSubscription<AuthState>? _authStateSubscription;
 
   // ---
-  // --- AUTH STATE CHANGED
+  // --- LIFECYCLE
   // ---
-  FutureOr<void> _onAppAuthStateChanged(
-    AppAuthStateChanged event,
-    Emitter<AppState> emit,
-  ) async {
-    emit(const AppLoadingState());
-
-    switch (event.event) {
-      case AuthChangeEvent.signedIn:
-        final profile = await supabaseService.fetchUserProfile();
-
-        debugPrint('_onAppAuthStateChanged [profile]: ${profile.toString()}');
-
-        if (profile == null) {
-          String? countryCode;
-
-          countryCode = await FlutterSimCountryCode.simCountryCode;
-          debugPrint('Country code: $countryCode');
-
-          emit(AppIncompleteState(countryCode: countryCode));
-        } else {
-          emit(AppAuthenticatedState(profile: profile));
-        }
-
-      case AuthChangeEvent.signedOut:
-        emit(AppUnauthenticatedState.initial);
-
-      default:
-        return;
-    }
-  }
-
-  // ---
-  // --- SUBMIT NAME AND BIRTHDATE
-  // ---
-  FutureOr<void> _onAppSubmitIncomplete(
-    AppSubmitIncomplete event,
-    Emitter<AppState> emit,
-  ) async {
-    emit(const AppLoadingState());
-
-    final profile =
-        await supabaseService.createProfile(event.birthdate, event.name);
-
-    if (profile != null) {
-      emit(AppAuthenticatedState(profile: profile));
-    } else {
-      emit(const AppIncompleteState());
-    }
-  }
-
-  void _subscribeAuthState() {
-    _authStateSubscription =
-        supabaseClient.auth.onAuthStateChange.listen((data) {
-      add(AppAuthStateChanged(event: data.event));
-    });
-  }
-
   @override
   Future<void> close() async {
     _authStateSubscription?.cancel();
     super.close();
   }
 
-  void authenticate() {
-    add(const AppAuthenticatedEvent());
+  // ---
+  // --- HELPER METHODS
+  // ---
+  _initApp() async {
+    final user = supabaseClient.auth.currentUser;
+
+    debugPrint('[AppBloc] _initApp() user id: ${user?.id}');
+
+    final event =
+        user == null ? AuthChangeEvent.signedOut : AuthChangeEvent.signedIn;
+
+    await _handleAuthChange(event, user);
+
+    _subscribeAuthState();
+  }
+
+  void _subscribeAuthState() {
+    _authStateSubscription = supabaseService.authChange.listen((authState) =>
+        _handleAuthChange(authState.event, authState.session?.user));
+  }
+
+  Future<void> _handleAuthChange(AuthChangeEvent event, User? user) async {
+    switch (event) {
+      case AuthChangeEvent.signedIn:
+        globalUser = user;
+        final profile = await supabaseService.fetchUserProfile();
+
+        if (Platform.isAndroid) {
+          OneSignal.User.addAlias('user_id', user!.id);
+        }
+
+        if (profile != null) {
+          add(_Authenticated(profile: profile));
+        } else {
+          add(const _Incompleted());
+        }
+
+      case AuthChangeEvent.signedOut:
+      case AuthChangeEvent.userDeleted:
+        globalUser = null;
+        final countryCode = await _getCountryCode();
+        add(_Unauthenticated(countryCode: countryCode));
+      default:
+        return;
+    }
+  }
+
+  Future<String?> _getCountryCode() async {
+    if (defaultTargetPlatform != TargetPlatform.android) {
+      return null;
+    }
+    return await FlutterSimCountryCode.simCountryCode;
+  }
+
+  String? countryCode;
+
+  // ---
+  // --- EVENT HANDLER: AUTHENTICATED
+  // ---
+  void _onAuthenticated(_Authenticated event, Emitter<AppState> emit) {
+    emit(AppAuthenticatedState(profile: event.profile));
+  }
+
+  // ---
+  // --- EVENT HANDLER: UNAUTHENTICATED
+  // ---
+  void _onUnauthenticated(_Unauthenticated event, Emitter<AppState> emit) {
+    emit(AppUnauthenticatedState(countryCode: event.countryCode));
+  }
+
+  // ---
+  // --- EVENT HANDLER: INCOMPLETED
+  // ---
+  void _onIncompleted(_Incompleted event, Emitter<AppState> emit) {
+    emit(const AppIncompletedState());
+  }
+
+  // ---
+  // --- PUBLIC API
+  // ---
+  void authenticate(Profile? profile) {
+    if (profile != null) {
+      add(_Authenticated(profile: profile));
+    } else {
+      add(const _Incompleted());
+    }
   }
 
   void signOut() {
-    authService.signOut();
-  }
-
-  void goToSignIn() {
-    add(const AppUnauthenticatedTabChanged(tab: UnauthenticatedTabs.signin));
-  }
-
-  void goToSignUp() {
-    add(const AppUnauthenticatedTabChanged(tab: UnauthenticatedTabs.signup));
+    supabaseService.signOut();
   }
 
   void submitComplete(String name, DateTime birthdate) {
-    add(AppSubmitIncomplete(name: name, birthdate: birthdate));
+    add(_SubmitIncomplete(name: name, birthdate: birthdate));
   }
 }

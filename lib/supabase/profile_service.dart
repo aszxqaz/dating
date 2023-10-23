@@ -23,16 +23,31 @@ mixin _ProfileService on _SupabaseService {
     preferences (*)
   ''';
 
+  static const _service = '[ProfileService]';
+
   // ---
   // --- CREATE PROFILE
   // ---
-  Future<Profile?> createProfile(DateTime birthdate, String name) async {
-    return tryExecute('createProfile', () async {
-      return await supabaseClient.from('profiles').insert({
-        'user_id': requireUserId,
-        'name': name,
-        'birthdate': birthdate.toUtc().toIso8601String(),
-      }).select();
+  Future<Profile?> createProfile(
+    DateTime birthdate,
+    Gender gender,
+    String name,
+  ) async {
+    return tryExecute('$_service createProfile', () async {
+      final json = await supabaseClient
+          .from('profiles')
+          .insert({
+            'user_id': requireUserId,
+            'name': name,
+            'birthdate': birthdate.toUtc().toIso8601String(),
+            'gender': gender.name,
+          })
+          .select<PostgrestMap>()
+          .single();
+
+      debugPrint('[ProfileService] profile created: ${jsonEncode(json)}');
+
+      return Profile.fromJson(json);
     });
   }
 
@@ -40,12 +55,12 @@ mixin _ProfileService on _SupabaseService {
   // --- FETCH USER PROFILE
   // ---
   Future<Profile?> fetchUserProfile() async {
-    return tryExecute('fetchUserProfile', () async {
+    return tryExecute('$_service fetchUserProfile', () async {
       debugPrint(
           '[ProfileService] fetching user profile with user_id: $requireUserId');
       final json = await supabaseClient
           .from('profiles')
-          .select<Map<String, dynamic>>(profileQuery)
+          .select<PostgrestMap>(profileQuery)
           .eq('user_id', requireUserId)
           .single();
 
@@ -57,10 +72,10 @@ mixin _ProfileService on _SupabaseService {
   // --- FETCH PROFILE BY USER ID
   // ---
   Future<Profile?> fetchProfile(String userId) async {
-    return tryExecute('findProfileByUserId', () async {
+    return tryExecute('$_service findProfile', () async {
       final json = await supabaseClient
           .from('profiles')
-          .select<Map<String, dynamic>>(profileQuery)
+          .select<PostgrestMap>(profileQuery)
           .eq('user_id', userId)
           .single();
 
@@ -72,10 +87,10 @@ mixin _ProfileService on _SupabaseService {
   // --- FETCH MANY PROFILES
   // ---
   Future<List<Profile>?> fetchProfiles(List<String> profileIds) async {
-    return tryExecute('findProfiles', () async {
+    return tryExecute('$_service findProfiles', () async {
       final json = await supabaseClient
           .from('profiles')
-          .select<List<Map<String, dynamic>>>(profileQuery)
+          .select<List<PostgrestMap>>(profileQuery)
           .in_('user_id', profileIds);
 
       return json.map(Profile.fromJson).toList();
@@ -86,28 +101,15 @@ mixin _ProfileService on _SupabaseService {
   // --- FETCH ALL PROFILES
   // ---
   Future<List<Profile>?> fetchCardsProfiles() async {
-    return tryExecute('findAllProfiles', () async {
+    return tryExecute('$_service findAllProfiles', () async {
       final list = await supabaseClient
           .from('profiles')
-          .select<List<Map<String, dynamic>>>(profileQuery)
-          .neq('user_id', globalUser!.id);
+          .select<List<PostgrestMap>>(profileQuery)
+          .neq('user_id', requireUserId);
 
       final profiles = list.map(Profile.fromJson).toList();
 
       return profiles;
-    });
-  }
-
-  // ---
-  // --- UPDATE LAST SEEN
-  // ---
-  Future<bool?> updateLastSeen() async {
-    return tryExecute('updateLastSeen', () async {
-      await supabaseClient
-          .from('profiles')
-          .update({'last_seen': DateTime.now().toUtc().toIso8601String()}).eq(
-              'user_id', requireUser.id);
-      return true;
     });
   }
 }

@@ -5,23 +5,25 @@ class Profile {
     required this.userId,
     required this.name,
     required this.birthdate,
-    required this.male,
+    required this.gender,
     required this.orientation,
     required this.photos,
     required this.location,
     required this.prefs,
     required this.lastSeen,
+    required this.quote,
   });
 
   final String userId;
   final String name;
   final DateTime birthdate;
-  final bool male;
+  final Gender gender;
   final int orientation;
   final List<Photo> photos;
   final UserLocation location;
   final Preferences prefs;
   final DateTime lastSeen;
+  final String quote;
 
   Iterable<String> get photoUrls => photos.map((photo) => photo.url);
   String? get avatarUrl => hasPhotos ? photos.first.url : null;
@@ -36,12 +38,13 @@ class Profile {
         ? UserLocation.fromJson(json['locations'])
         : UserLocation.empty;
 
-    final photos = (json['photos'] as List)
-        .cast<Map<String, dynamic>>()
-        .map(
-          (photo) => Photo.fromJson(photo),
-        )
-        .toList();
+    final photos = json['photos'] != null
+        ? (json['photos'] as List)
+            .map(
+              (photo) => Photo.fromJson(photo),
+            )
+            .toList()
+        : <Photo>[];
 
     final prefs = json['preferences'] != null
         ? Preferences.fromJson(json['preferences'])
@@ -51,12 +54,13 @@ class Profile {
       userId: json['user_id'],
       name: json['name'],
       birthdate: DateTime.parse(json['birthdate']),
-      lastSeen: DateTime.parse(json['last_seen']).toLocal(),
-      male: json['male'] ?? false,
+      lastSeen: DateTime.parse(json['last_seen'] ?? DateTime.now()).toLocal(),
+      gender: Gender.fromString(json['gender']),
       orientation: json['orientation'] ?? 0,
       photos: photos,
       location: location,
       prefs: prefs,
+      quote: json['quote'],
     );
   }
 
@@ -64,7 +68,7 @@ class Profile {
         'user_id': userId,
         'name': name,
         'birthdate': birthdate.toIso8601String(),
-        'male': male,
+        'gender': gender.name,
         'orientation': orientation,
         'photos': photos.map((photo) => photo.toJson()).toList(),
         'location': location.toJson(),
@@ -76,29 +80,44 @@ class Profile {
     String? name,
     DateTime? birthdate,
     DateTime? lastSeen,
-    bool? male,
+    Gender? gender,
     int? orientation,
     List<Photo>? photos,
     UserLocation? location,
     Preferences? prefs,
+    String? quote,
   }) =>
       Profile(
         userId: userId,
         name: name ?? this.name,
         birthdate: birthdate ?? this.birthdate,
-        male: male ?? this.male,
+        gender: gender ?? this.gender,
         orientation: orientation ?? this.orientation,
         photos: photos ?? this.photos,
         location: location ?? this.location,
         prefs: prefs ?? this.prefs,
         lastSeen: lastSeen ?? this.lastSeen,
+        quote: quote ?? this.quote,
       );
 
   @override
   toString() =>
-      'Profile (userId: *, name: $name, birthdate: *, male: $male, orientation: $orientation,'
+      'Profile (userId: *, name: $name, birthdate: *, gender: ${gender.name}, orientation: $orientation,'
       'photos: (length: ${photos.length}), location: ${location.displayPair})';
 
   Photo? getPhoto(String photoId) =>
       photos.firstWhereOrNull((photo) => photo.id == photoId);
+}
+
+enum Gender {
+  male,
+  female;
+
+  static Gender fromString(String name) {
+    for (final value in Gender.values) {
+      if (value.name == name) return value;
+    }
+
+    throw Exception('No gender for "$name" found');
+  }
 }

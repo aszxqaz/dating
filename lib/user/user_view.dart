@@ -1,24 +1,23 @@
 import 'package:collection/collection.dart';
 import 'package:dating/common/common.dart';
+import 'package:dating/common/profile_info/quote.dart';
+import 'package:dating/helpers/pick_photo.dart';
 import 'package:dating/misc/extensions.dart';
 import 'package:dating/preferences/preferences.dart';
 import 'package:dating/supabase/client.dart';
 import 'package:dating/supabase/service.dart';
 import 'package:dating/user/bloc/user_bloc.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:ionicons/ionicons.dart';
 
-part 'buttons.dart';
-part '_wrap_items.dart';
 part '_chips_wrap.dart';
 part '_pref_chip.dart';
+part '_wrap_items.dart';
 part '_wrap_list.dart';
+part 'buttons.dart';
 part 'user_info.dart';
 
 class UserScreen extends StatelessWidget {
@@ -61,7 +60,7 @@ class UserScreen extends StatelessWidget {
                       ),
                       child:
                           BlocSelector<UserBloc, UserState, Iterable<String>>(
-                        selector: (state) => state.profile!.photoUrls,
+                        selector: (state) => state.profile.photoUrls,
                         builder: (context, photoUrls) {
                           return photoUrls.isNotEmpty
                               ? PhotoSlider(
@@ -78,7 +77,7 @@ class UserScreen extends StatelessWidget {
 
                     // --- DELETE PHOTO BUTTON
                     BlocSelector<UserBloc, UserState, bool>(
-                      selector: (state) => state.profile!.hasPhotos,
+                      selector: (state) => state.profile.hasPhotos,
                       builder: (context, hasPhotos) {
                         return hasPhotos
                             ? Positioned(

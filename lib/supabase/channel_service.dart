@@ -4,10 +4,10 @@ mixin _ChannelService on _SupabaseService {
   RealtimeChannel createChannel(String name) {
     return supabaseClient.channel(name)
       ..onClose(() {
-        debugPrint('RealtimeChannel [$name]: CLOSED');
+        debugPrint('[ChannelService] $name closed');
       })
       ..onError((error) {
-        debugPrint('RealtimeChannel [$name]: ERROR $error');
+        debugPrint('[ChannelService] $name error: $error');
       });
   }
 }

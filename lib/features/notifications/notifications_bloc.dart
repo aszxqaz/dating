@@ -1,4 +1,3 @@
-import 'package:dating/supabase/models/notification.dart';
 import 'package:dating/supabase/service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -10,6 +9,7 @@ class NotificationsBloc extends Bloc<_NotificationsEvent, NotificationsState> {
   NotificationsBloc() : super(NotificationsState.empty) {
     on<_FetchLikes>(_onFetchLikes);
     on<_SubscriptionRequested>(_onSubscriptionRequested);
+    // on<_Unsubscribed>(_onUnsubscribed);
     on<_LikesReceived>(_onLikeNotificationsReceived);
     on<_ReadUnread>(_onReadUnread);
   }
@@ -18,15 +18,6 @@ class NotificationsBloc extends Bloc<_NotificationsEvent, NotificationsState> {
 
   static NotificationsBloc of(BuildContext context) =>
       context.read<NotificationsBloc>();
-
-  // ---
-  // --- LIFECYCLE
-  // ---
-  @override
-  close() async {
-    await _unsubscribeLikeNotifications?.call();
-    super.close();
-  }
 
   // ---
   // --- FETCH (ALL) LIKE NOTIFICATIONS
@@ -54,7 +45,19 @@ class NotificationsBloc extends Bloc<_NotificationsEvent, NotificationsState> {
         add(_LikesReceived(likes: [like]));
       },
     );
+    debugPrint('[NotificationsBloc] subscribed');
   }
+
+  // ---
+  // --- UNSUBSCRIBE
+  // ---
+  // void _onUnsubscribed(
+  //   _Unsubscribed event,
+  //   Emitter<NotificationsState> emit,
+  // ) async {
+  //   _unsubscribeLikeNotifications?.call();
+  //   debugPrint('[NotificationsBloc] unsubscribed');
+  // }
 
   // ---
   // --- LIKE NOTIFICATIONS RECEIVED
@@ -63,7 +66,6 @@ class NotificationsBloc extends Bloc<_NotificationsEvent, NotificationsState> {
     _LikesReceived event,
     Emitter<NotificationsState> emit,
   ) {
-    debugPrint('Notifications received: length: ${event.likes.length}');
     final likes = event.likes + state.likes;
     emit(state.copyWith(likes: likes, last: event.likes));
   }
@@ -87,8 +89,13 @@ class NotificationsBloc extends Bloc<_NotificationsEvent, NotificationsState> {
     add(const _FetchLikes());
   }
 
-  void requestSubscription() {
+  void subscribe() {
     add(const _SubscriptionRequested());
+  }
+
+  void unsubscribe() {
+    _unsubscribeLikeNotifications?.call();
+    debugPrint('[NotificationsBloc] subscription cancellation requested');
   }
 
   void readUnread() {

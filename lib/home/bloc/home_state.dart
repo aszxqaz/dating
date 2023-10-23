@@ -1,6 +1,6 @@
 part of 'home_bloc.dart';
 
-enum HomeTabs {
+enum HomeTab {
   feed,
   notifications,
   slides,
@@ -8,7 +8,7 @@ enum HomeTabs {
   search,
   user;
 
-  static HomeTabs initial = HomeTabs.slides;
+  static HomeTab initial = HomeTab.slides;
 }
 
 @immutable
@@ -18,34 +18,34 @@ final class HomeState {
     required this.location,
   });
 
-  final HomeTabs tab;
+  final HomeTab tab;
   final UserLocation location;
 
   static const initial = HomeState(
-    tab: HomeTabs.slides,
+    tab: HomeTab.slides,
     location: UserLocation.empty,
   );
 
-  HomeState copyWith({HomeTabs? tab, UserLocation? location}) => HomeState(
+  HomeState copyWith({HomeTab? tab, UserLocation? location}) => HomeState(
         tab: tab ?? this.tab,
         location: location ?? this.location,
       );
 }
 
-extension HomeTabsDisplay on HomeTabs {
+extension HomeTabsDisplay on HomeTab {
   String get text {
     switch (this) {
-      case HomeTabs.feed:
+      case HomeTab.feed:
         return 'Feed';
-      case HomeTabs.notifications:
+      case HomeTab.notifications:
         return 'Notifications';
-      case HomeTabs.slides:
+      case HomeTab.slides:
         return 'Hot';
-      case HomeTabs.messages:
+      case HomeTab.messages:
         return 'Messages';
-      case HomeTabs.user:
+      case HomeTab.user:
         return 'My Profile';
-      case HomeTabs.search:
+      case HomeTab.search:
         return 'Search';
     }
   }

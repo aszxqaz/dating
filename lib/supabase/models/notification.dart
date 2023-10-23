@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
+part of 'models.dart';
 
-@immutable
 class LikeNotification {
   const LikeNotification({
     required this.photoId,

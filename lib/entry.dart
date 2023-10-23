@@ -1,11 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dating/app/app.dart';
-import 'package:dating/common/animations.dart';
+import 'package:dating/auth/auth_page.dart';
 import 'package:dating/features/features.dart';
 import 'package:dating/home/bloc/home_bloc.dart';
 import 'package:dating/home/home_page.dart';
-import 'package:dating/signin/view/signin_view.dart';
-import 'package:dating/signup/signup.dart';
+import 'package:dating/incomplete/incomplete_page.dart';
 import 'package:dating/user/bloc/user_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -32,22 +31,46 @@ class AppEntry extends StatelessWidget {
         BlocProvider(
           create: (_) => NotificationsBloc(),
         ),
+        BlocProvider(
+          create: (_) => FeedBloc(),
+        ),
       ],
       child: MultiBlocListener(
         listeners: [
+          // ---
+          // --- AUTHENTICATED
+          // ---
           BlocListener<AppBloc, AppState>(
-            listener: (context, state) {
-              if (state is AppAuthenticatedState) {
-                ProfilesBloc.of(context).fetchCardsProfiles();
-                NotificationsBloc.of(context).fetchLikeNotifications();
-                NotificationsBloc.of(context).requestSubscription();
-                ChatsBloc.of(context).fetchChats();
-                ChatsBloc.of(context).requestSubscription();
-                HomeBloc.of(context).requestLocationSubscription();
-                HomeBloc.of(context).requestLastSeenSubscription();
-              } else {}
+            listenWhen: (previous, current) =>
+                previous is! AppAuthenticatedState &&
+                current is AppAuthenticatedState,
+            listener: (context, _) {
+              ChatsBloc.of(context).subscribe();
+              HomeBloc.of(context).subscribe();
+              NotificationsBloc.of(context).subscribe();
+              ProfilesBloc.of(context).fetchCardsProfiles();
+              NotificationsBloc.of(context).fetchLikeNotifications();
+              ChatsBloc.of(context).fetchChats();
             },
           ),
+
+          // ---
+          // --- UNAUTHENTICATED
+          // ---
+          BlocListener<AppBloc, AppState>(
+            listenWhen: (previous, current) =>
+                previous is AppAuthenticatedState &&
+                current is! AppAuthenticatedState,
+            listener: (context, _) {
+              NotificationsBloc.of(context).unsubscribe();
+              ChatsBloc.of(context).unsubscribe();
+              HomeBloc.of(context).unsubscribe();
+            },
+          ),
+
+          // ---
+          // --- CACHE NEW PROFILES PHOTOS
+          // ---
           BlocListener<ProfilesBloc, ProfilesState>(
             listenWhen: (previous, current) => previous.last != current.last,
             listener: (context, state) {
@@ -60,6 +83,10 @@ class AppEntry extends StatelessWidget {
               }
             },
           ),
+
+          // ---
+          // --- FETCH PROFILES ON NOTIFICATIONS RECEIVED
+          // ---
           BlocListener<NotificationsBloc, NotificationsState>(
             listenWhen: (previous, current) => previous.last != current.last,
             listener: (context, state) {
@@ -70,6 +97,10 @@ class AppEntry extends StatelessWidget {
               ProfilesBloc.of(context).fetchProfiles(profileIds);
             },
           ),
+
+          // ---
+          // --- FETCH PROFILES ON CHATS RECEIVED
+          // ---
           BlocListener<ChatsBloc, ChatsState>(
             listenWhen: (previous, current) => previous.last != current.last,
             listener: (context, state) {
@@ -79,6 +110,43 @@ class AppEntry extends StatelessWidget {
               ProfilesBloc.of(context).fetchProfiles(profileIds);
             },
           ),
+
+          // ---
+          // --- FETCH PROFILES ON FEEDS RECEIVED
+          // ---
+          BlocListener<FeedBloc, FeedState>(
+            listenWhen: (previous, current) => previous.last != current.last,
+            listener: (context, state) {
+              final profileIds =
+                  state.last.map((feed) => feed.senderId).toList();
+
+              ProfilesBloc.of(context).fetchProfiles(profileIds);
+            },
+          ),
+
+          // ---
+          // --- FETCH AND SUBSCRIBE FEED ON FEED TAB OPENED
+          // ---
+          BlocListener<HomeBloc, HomeState>(
+            listener: (context, state) {
+              switch (state.tab) {
+                case HomeTab.feed:
+                  FeedBloc.of(context).fetchFeed();
+                  FeedBloc.of(context).subscribe();
+
+                default:
+              }
+            },
+          ),
+
+          // ---
+          // --- UNSUBSCRIBE ON FEED TAB CLOSED
+          // ---
+          BlocListener<HomeBloc, HomeState>(
+            listenWhen: (previous, current) =>
+                previous.tab == HomeTab.feed && current.tab != HomeTab.feed,
+            listener: (context, _) => FeedBloc.of(context).unsubscribe(),
+          ),
         ],
         child: BlocBuilder<AppBloc, AppState>(
           builder: (context, state) {
@@ -87,13 +155,13 @@ class AppEntry extends StatelessWidget {
                 return const Center(
                   child: CircularProgressIndicator(),
                 );
-              case AppIncompleteState _:
-                return const Text('Incomplete');
 
               /// --- AUTHENTICATED AND COMPLETE
               case AppAuthenticatedState state:
+                final profile = state.profile;
+
                 return BlocProvider(
-                  create: (context) => UserBloc(profile: state.profile),
+                  create: (context) => UserBloc(profile: profile),
                   child: BlocListener<UserBloc, UserState>(
                     listenWhen: (previous, current) =>
                         previous.profile.photos.length !=
@@ -108,15 +176,12 @@ class AppEntry extends StatelessWidget {
                     child: const HomePage(),
                   ),
                 );
-              case AppUnauthenticatedState state:
-                final page = switch (state.tab) {
-                  UnauthenticatedTabs.signin => const SignInPage(),
-                  UnauthenticatedTabs.signup => const SignUpPage()
-                };
 
-                return FadeThroughSwitcher(
-                  child: page,
-                );
+              case AppIncompletedState _:
+                return const IncompletePage();
+
+              case AppUnauthenticatedState state:
+                return AuthPage(countryCode: state.countryCode);
             }
           },
         ),

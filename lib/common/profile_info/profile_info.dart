@@ -21,7 +21,7 @@ class ProfileInfo extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        NameAgeInfo(name: profile.name, birthdate: profile.birthdate),
+        NameAgeInfo(profile),
         const SizedBox(height: 4),
         LocationInfo(location: profile.location),
         const SizedBox(height: 24),

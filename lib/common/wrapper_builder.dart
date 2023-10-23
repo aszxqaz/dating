@@ -4,17 +4,20 @@ class WrapperBuilder extends StatelessWidget {
   const WrapperBuilder({
     super.key,
     required this.builder,
+    this.floatingActionButton,
     this.appBar,
   });
 
   final Widget Function(BuildContext context, BoxConstraints constraints)
       builder;
   final AppBar? appBar;
+  final Widget? floatingActionButton;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: appBar,
+      floatingActionButton: floatingActionButton,
       body: LayoutBuilder(
         builder: (context, constraints) {
           return SingleChildScrollView(

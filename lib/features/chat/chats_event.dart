@@ -4,8 +4,8 @@ sealed class _ChatsEvent {
   const _ChatsEvent();
 }
 
-final class _SubscriptionRequested extends _ChatsEvent {
-  const _SubscriptionRequested();
+final class _Subscribed extends _ChatsEvent {
+  const _Subscribed();
 }
 
 final class _FetchChats extends _ChatsEvent {
@@ -24,10 +24,12 @@ final class _MessageSent extends _ChatsEvent {
   const _MessageSent({
     required this.partnerId,
     required this.text,
+    required this.photos,
   });
 
   final String partnerId;
   final String text;
+  final List<PhotoUploaderItem>? photos;
 }
 
 final class _MessagesReceived extends _ChatsEvent {
@@ -35,3 +37,7 @@ final class _MessagesReceived extends _ChatsEvent {
 
   final List<ChatMessage> messages;
 }
+
+// final class _Unsubscribed extends _ChatsEvent {
+//   const _Unsubscribed();
+// }

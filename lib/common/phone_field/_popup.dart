@@ -55,7 +55,6 @@ class _CountriesSelectPopupState extends State<_CountriesSelectPopup> {
                                   .startsWith(query.toLowerCase()) ||
                               info.dialCode.contains(query))
                           .toList();
-                      debugPrint(list.value.length.toString());
                     },
                   ),
                   Expanded(

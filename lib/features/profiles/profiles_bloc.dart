@@ -66,6 +66,8 @@ class ProfilesBloc extends Bloc<_ProfilesEvent, ProfilesState> {
     final profileIds =
         event.profileIds.whereNot(state.profiles.contains).toList();
 
+    if (profileIds.isEmpty) return;
+
     final profiles = await supabaseService.fetchProfiles(profileIds);
 
     if (profiles != null) {

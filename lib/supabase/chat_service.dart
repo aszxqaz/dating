@@ -5,11 +5,13 @@ mixin _ChatService on _BaseSupabaseService {
   // --- FETCH ALL CHATS
   // ---
   Future<List<Chat>?> fetchChats() async {
-    return tryExecute('fetchChats', () async {
-      final messagesJson = await supabaseClient
+    return tryExecute('[ChatService.fetchChats]', () async {
+      var messagesJson = await supabaseClient
           .from('chat_messages')
-          .select<List<Map<String, dynamic>>>()
+          .select<PostgrestList>()
           .or('sender_id.eq.$requireUserId,receiver_id.eq.$requireUserId');
+
+      debugPrint('$messagesJson');
 
       final messages = messagesJson.map(
         (json) => ChatMessage.fromJson(
@@ -36,28 +38,50 @@ mixin _ChatService on _BaseSupabaseService {
     });
   }
 
-  Future<ChatMessage?> sendTextMessageNew(ChatMessage draft) async {
-    final userId = globalUser?.id;
-    if (userId == null || userId == draft.receiverId) return null;
+  Future<ChatMessage?> sendChatMessage({
+    required ChatMessage message,
+    void Function(String photoId)? onPhotoLoaded,
+  }) async {
+    return tryExecute('[ChatService] sendChatMessage()', () async {
+      if (requireUserId == message.receiverId) return null;
 
-    try {
+      Map<String, String> photoUrls = {};
+
+      if (message.photos != null) {
+        await Future.wait(
+          message.photos!.map((photo) async {
+            final response = await uploadBinaryPhoto(photo.bytes!);
+            onPhotoLoaded?.call(photo.id);
+            photoUrls[photo.id] = response!.url;
+          }),
+        );
+      }
+
+      if (photoUrls.isEmpty && message.text?.isNotEmpty == false) {
+        return null;
+      }
+
+      // debugPrint(message.photo)
+
       final json = await supabaseClient
           .from('chat_messages')
           .insert({
-            'id': draft.id,
-            'sender_id': userId,
-            'receiver_id': draft.receiverId,
-            'text': draft.text,
+            'id': message.id,
+            'sender_id': requireUserId,
+            'receiver_id': message.receiverId,
+            'text': message.text,
+            'photos_json': message.photos
+                ?.map((photo) => photo.copyWith(
+                      url: photoUrls[photo.id],
+                    ))
+                .map((photo) => photo.toJson())
+                .toList(),
           })
-          .select<Map<String, dynamic>>()
+          .select<Map<String, dynamic>>('created_at')
           .single();
 
-      final message = ChatMessage.fromJson(json, incoming: false);
-      return message;
-    } catch (e) {
-      debugPrint(e.toString());
-      return null;
-    }
+      return message.copyWith(createdAt: DateTime.tryParse(json['created_at']));
+    });
   }
 
   /// ---

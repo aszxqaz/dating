@@ -13,20 +13,12 @@ part 'user_state.dart';
 
 class UserBloc extends Bloc<_UserEvent, UserState> {
   UserBloc({required Profile profile}) : super(UserState(profile: profile)) {
-    // --- LOAD PHOTOS
     on<_LoadPhotos>(_onLoadPhotos);
-
-    // --- LOAD PROFILE
     on<_FetchUserProfile>(_onFetchUserProfile);
-
-    // --- CHANGE PREFERENCES
     on<_ChangePrefs>(_onChangePrefs);
-
-    // --- UPLOAD PHOTO
     on<_UploadPhoto>(_onUploadPhoto);
-
-    // --- DELETE PHOTO
     on<_DeletePhoto>(_onDeletePhoto);
+    on<_QuoteUpdated>(_onQuoteUpdated);
   }
 
   static UserBloc of(BuildContext context) => context.read<UserBloc>();
@@ -76,7 +68,7 @@ class UserBloc extends Bloc<_UserEvent, UserState> {
     _UploadPhoto event,
     Emitter<UserState> emit,
   ) async {
-    await supabaseService.uploadPhoto(bytes: event.bytes);
+    await supabaseService.uploadProfilePhoto(bytes: event.bytes);
     final photos = await supabaseService.photosByUserId();
     if (photos != null) {
       emit(state.copyWith(profile: state.profile.copyWith(photos: photos)));
@@ -109,8 +101,6 @@ class UserBloc extends Bloc<_UserEvent, UserState> {
     _ChangePrefs event,
     Emitter<UserState> emit,
   ) async {
-    if (state.profile == null) return;
-
     final oldPrefs = state.profile.prefs;
     bool? result;
 
@@ -154,6 +144,23 @@ class UserBloc extends Bloc<_UserEvent, UserState> {
   }
 
   // ---
+  // --- UPDATE QUOTE
+  // ---
+  Future<void> _onQuoteUpdated(
+    _QuoteUpdated event,
+    Emitter<UserState> emit,
+  ) async {
+    final oldQuote = state.profile.quote;
+    if (oldQuote == event.quote) return;
+
+    emit(state.copyWith(profile: state.profile.copyWith(quote: event.quote)));
+    final ok = await supabaseService.updateqQuote(event.quote);
+    if (ok != true) {
+      emit(state.copyWith(profile: state.profile.copyWith(quote: oldQuote)));
+    }
+  }
+
+  // ---
   // --- PUBLIC API
   // ---
   uploadPhoto(Uint8List bytes) {
@@ -174,5 +181,9 @@ class UserBloc extends Bloc<_UserEvent, UserState> {
 
   fetchUserProfile() {
     add(const _FetchUserProfile());
+  }
+
+  updateQuote(String quote) {
+    add(_QuoteUpdated(quote: quote));
   }
 }

@@ -13,65 +13,84 @@ class _MessagesScrollView extends StatefulWidget {
 
 class _MessagesScrollViewState extends State<_MessagesScrollView> {
   final controller = ScrollController();
-  bool reverse = false;
+  final reverse = ValueNotifier(false);
 
   @override
   void didUpdateWidget(covariant _MessagesScrollView oldWidget) {
-    // controller.jumpTo(controller.position.maxScrollExtent);
-    updateReverse();
+    if (widget.messages.length != oldWidget.messages.length) {
+      updateReverse();
+    }
     super.didUpdateWidget(oldWidget);
   }
 
   @override
   void didChangeDependencies() {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      // scroll(500);
       updateReverse();
     });
     super.didChangeDependencies();
   }
 
   updateReverse() {
-    setState(() {
-      reverse = controller.position.maxScrollExtent >
-          controller.position.minScrollExtent;
-    });
-  }
-
-  void scroll(int ms) {
-    controller.animateTo(
-      controller.position.maxScrollExtent,
-      duration: Duration(milliseconds: ms),
-      curve: Curves.fastEaseInToSlowEaseOut,
-    );
+    reverse.value = controller.position.maxScrollExtent >
+        controller.position.minScrollExtent;
   }
 
   @override
   Widget build(BuildContext context) {
     final messages = widget.messages;
 
-    return SingleChildScrollView(
-      reverse: reverse,
-      controller: controller,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 16, 8, 12),
-        child: Column(
-          children: messages.mapIndexed<Widget>(
-            (index, message) {
-              final last = index == messages.length - 1;
-
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4.0),
-                child: Align(
-                  alignment:
-                      message.incoming ? Alignment.topLeft : Alignment.topRight,
-                  child: _ChatMessageWidget(message: message),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return ValueListenableBuilder(
+          valueListenable: reverse,
+          builder: (_, reverse, child) {
+            return SingleChildScrollView(
+              reverse: reverse,
+              controller: controller,
+              child: child,
+            );
+          },
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: constraints.maxHeight,
+              minWidth: constraints.maxWidth,
+            ),
+            child: CustomPaint(
+              size: Size(constraints.maxWidth, constraints.maxHeight),
+              painter: StripesBackground(
+                color: Colors.lightBlue.withAlpha(20),
+                strokeWidth: 4,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(8, 16, 8, 12),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Column(
+                      children: messages.mapIndexed<Widget>(
+                        (index, message) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4.0),
+                            child: Align(
+                              alignment: message.incoming
+                                  ? Alignment.topLeft
+                                  : Alignment.topRight,
+                              child: _ChatMessageWidget(
+                                message: message,
+                                constraintsWidth: constraints.maxWidth,
+                              ),
+                            ),
+                          );
+                        },
+                      ).toList(),
+                    );
+                  },
                 ),
-              );
-            },
-          ).toList(),
-        ),
-      ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

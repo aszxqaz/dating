@@ -80,15 +80,13 @@ class _ProfilePageState extends State<ProfilePage>
   @override
   Widget build(BuildContext context) {
     return WrapperBuilder(
+      floatingActionButton: _FloatingActionButton(partnerId: widget.profileId),
       builder: (context, constraints) {
         final maxWidth = constraints.maxWidth;
         final maxHeight = constraints.maxHeight;
 
         final sliderHeight = maxHeight * 0.6;
         final placeholderHeight = maxHeight * 0.5;
-
-        final favouriteSize = sliderHeight / 16;
-        final messageSize = sliderHeight / 13;
 
         return BlocSelector<ProfilesBloc, ProfilesState, Profile>(
           selector: (state) => state.getProfile(widget.profileId)!,
@@ -215,16 +213,16 @@ class _ProfilePageState extends State<ProfilePage>
                               child: ProfileInfo(profile: profile),
                             ),
                           ),
-                          Positioned(
-                            top: 16,
-                            right: 8,
-                            child: _FavouriteMessageRow(
-                              sliderHeight: sliderHeight,
-                              favouriteSize: favouriteSize,
-                              messageSize: messageSize,
-                              partnerId: profile.userId,
-                            ),
-                          ),
+                          // Positioned(
+                          //   top: 16,
+                          //   right: 8,
+                          //   child: _FavouriteMessageRow(
+                          //     sliderHeight: sliderHeight,
+                          //     favouriteSize: favouriteSize,
+                          //     messageSize: messageSize,
+                          //     partnerId: profile.userId,
+                          //   ),
+                          // ),
                         ],
                       ),
                   ],
@@ -266,3 +264,27 @@ const _photoSliderBoxDecoration = BoxDecoration(
     BoxShadow(blurRadius: 5, color: Colors.black54, offset: Offset(0, 0)),
   ],
 );
+
+class _FloatingActionButton extends StatelessWidget {
+  const _FloatingActionButton({required this.partnerId});
+
+  final String partnerId;
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledIconButton(
+      onPressed: () {
+        Navigator.of(context).push(createRightBottomFadeScaleRoute(
+          ChatView.routeWidget(
+            context: context,
+            partnerId: partnerId,
+          ),
+        ));
+      },
+      icon: Icons.message,
+      offset: const Offset(0, 2),
+      padding: 15,
+      size: 36,
+    );
+  }
+}

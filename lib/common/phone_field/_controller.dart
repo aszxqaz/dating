@@ -15,11 +15,16 @@ class PhoneFieldController {
     }
 
     _notifier = ValueNotifier(dialCode);
+    _controller = TextEditingController();
   }
 
   late final ValueNotifier<String> _notifier;
+  late final TextEditingController _controller;
+
+  String get number => _notifier.value + _controller.text;
 
   dispose() {
     _notifier.dispose();
+    _controller.dispose();
   }
 }

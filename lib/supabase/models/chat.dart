@@ -1,10 +1,10 @@
 part of 'models.dart';
 
-class Chat {
-  const Chat({
+class Chat extends Identifiable {
+  Chat({
     required this.partnerId,
     this.messages = const [],
-  });
+  }) : super(id: partnerId);
 
   final String partnerId;
   final List<ChatMessage> messages;
@@ -19,6 +19,9 @@ class Chat {
       messages.where((m) => !m.read && m.incoming).toList();
 
   ChatMessage get lastMessage => messages.last;
+
+  ChatMessage? getChatMessage(String id) =>
+      messages.singleWhereOrNull((msg) => msg.id == id);
 
   // ---
   // --- METHODS

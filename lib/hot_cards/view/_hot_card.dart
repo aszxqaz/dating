@@ -40,7 +40,7 @@ class _HotCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 if (profile.location.isNotEmpty)
                   BlocSelector<UserBloc, UserState, UserLocation>(
-                    selector: (state) => state.profile!.location,
+                    selector: (state) => state.profile.location,
                     builder: (context, location) {
                       final distanceText = getLocationDistanceText(
                         location,

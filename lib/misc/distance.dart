@@ -28,17 +28,12 @@ Distance? getDistance(UserLocation l1, UserLocation l2) {
       l2.latitude == null ||
       l2.longitude == null) return null;
 
-  debugPrint('L1: (${l1.latitude}, ${l1.longitude})');
-  debugPrint('L2: (${l2.latitude}, ${l2.longitude})');
-
   final km = _getDistanceImpl(
     l1.latitude!,
     l1.longitude!,
     l2.latitude!,
     l2.longitude!,
   );
-
-  debugPrint(km.toString());
 
   if (km > 1) return Distance(unit: DistanceUnit.kilometer, amount: km.round());
 

@@ -26,8 +26,8 @@ class _HomeBottomNavigationBar extends StatelessWidget {
               children: [
                 _BottomNavigationBarIconButton(
                   onPressed: () =>
-                      context.read<HomeBloc>().setTab(HomeTabs.feed),
-                  isActive: state.tab == HomeTabs.feed,
+                      context.read<HomeBloc>().setTab(HomeTab.feed),
+                  isActive: state.tab == HomeTab.feed,
                   src: 'assets/icons/paper_plane.svg',
                 ),
 
@@ -42,8 +42,8 @@ class _HomeBottomNavigationBar extends StatelessWidget {
                       child: _BottomNavigationBarIconButton(
                         onPressed: () => context
                             .read<HomeBloc>()
-                            .setTab(HomeTabs.notifications),
-                        isActive: state.tab == HomeTabs.notifications,
+                            .setTab(HomeTab.notifications),
+                        isActive: state.tab == HomeTab.notifications,
                         src: 'assets/icons/bell.svg',
                       ),
                     );
@@ -53,16 +53,16 @@ class _HomeBottomNavigationBar extends StatelessWidget {
                 /// --- HOT SEARCH
                 _BottomNavigationBarIconButton(
                   onPressed: () =>
-                      context.read<HomeBloc>().setTab(HomeTabs.search),
-                  isActive: state.tab == HomeTabs.search,
+                      context.read<HomeBloc>().setTab(HomeTab.search),
+                  isActive: state.tab == HomeTab.search,
                   src: 'assets/icons/search.svg',
                 ),
 
                 /// --- HOT SLIDES
                 _BottomNavigationBarIconButton(
                   onPressed: () =>
-                      context.read<HomeBloc>().setTab(HomeTabs.slides),
-                  isActive: state.tab == HomeTabs.slides,
+                      context.read<HomeBloc>().setTab(HomeTab.slides),
+                  isActive: state.tab == HomeTab.slides,
                   src: 'assets/icons/hot.svg',
                 ),
 
@@ -76,8 +76,8 @@ class _HomeBottomNavigationBar extends StatelessWidget {
                       backgroundColor: Colors.green.shade600,
                       child: _BottomNavigationBarIconButton(
                         onPressed: () =>
-                            context.read<HomeBloc>().setTab(HomeTabs.messages),
-                        isActive: state.tab == HomeTabs.messages,
+                            context.read<HomeBloc>().setTab(HomeTab.messages),
+                        isActive: state.tab == HomeTab.messages,
                         src: 'assets/icons/message.svg',
                       ),
                     );
@@ -87,8 +87,8 @@ class _HomeBottomNavigationBar extends StatelessWidget {
                 /// --- USER SETTINGS
                 _BottomNavigationBarIconButton(
                   onPressed: () =>
-                      context.read<HomeBloc>().setTab(HomeTabs.user),
-                  isActive: state.tab == HomeTabs.user,
+                      context.read<HomeBloc>().setTab(HomeTab.user),
+                  isActive: state.tab == HomeTab.user,
                   src: 'assets/icons/user.svg',
                 ),
               ],
